@@ -1,7 +1,16 @@
 package main
 
-import "fmt"
+import (
+	"github.com/Jagadwp/link-easy-go/db"
+	"github.com/Jagadwp/link-easy-go/internal/controller"
+)
 
 func main() {
-	fmt.Println("Link Easy. It's about to go go")
+
+	db.DatabaseInit()
+
+	e := controller.Init()
+
+	e.Logger.Fatal(e.Start(":8080"))
+
 }
