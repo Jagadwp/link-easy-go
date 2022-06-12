@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	model "github.com/Jagadwp/link-easy-go/internal/entity"
+	model "github.com/Jagadwp/link-easy-go/internal/models"
 	"github.com/Jagadwp/link-easy-go/internal/shared/config"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -34,6 +34,8 @@ func DatabaseInit() {
 	if e != nil {
 		panic(e)
 	}
+
+	fmt.Println("DB Connected")
 
 	initMigrate()
 }

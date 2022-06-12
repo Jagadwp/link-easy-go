@@ -1,5 +1,6 @@
 package config
 
 const (
-	EnvPath       = "../.env"
+	EnvPath = "../.env"
+	AppPort = "8080"
 )
