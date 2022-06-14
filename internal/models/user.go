@@ -9,11 +9,11 @@ import (
 )
 
 type User struct {
-	ID        int       `json:"id" form:"id" gorm:"primaryKey"`
-	Username  string    `json:"username" form:"username" gorm:"unique"`
-	Fullname  string    `json:"fullname" form: "fullname"`
-	Email     string    `json:"email" form:"email"`
-	Password  string    `json:"password" form:"password"`
+	ID        int       `json:"id" form:"id" gorm:"primaryKey;not null"`
+	Username  string    `json:"username" form:"username" gorm:"unique;not null"`
+	Fullname  string    `json:"fullname" form: "fullname gorm:"not null"`
+	Email     string    `json:"email" form:"email" gorm:"unique;not null"`
+	Password  string    `json:"password" form:"password" gorm:"not null"`
 	Admin     bool      `json:"admin" form: "admin" gorm:"default:false"`
 	CreatedAt time.Time `json:"created_at" form: "created_at"`
 	UpdatedAt time.Time `json:"updated_at" form: "updated_at"`

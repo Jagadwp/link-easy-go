@@ -2,18 +2,22 @@ package dto
 
 import "time"
 
-type RegisterRequest struct {
-	Name     string `json:"name"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Role     string `json:"role"`
+type InsertUserRequest struct {
+	Username  string    `json:"username" form:"username"`
+	Fullname  string    `json:"fullname" form: "fullname"`
+	Email     string    `json:"email" form:"email"`
+	Password  string    `json:"password" form:"password"`
 }
 
-type RegisterResponse struct {
-	ID       int64  `json:"id"`
-	Name     string `json:"name"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
+type CommonUserResponse struct {
+	ID        int       `json:"id" form:"id"`
+	Username  string    `json:"username" form:"username"`
+	Fullname  string    `json:"fullname" form: "fullname"`
+	Email     string    `json:"email" form:"email"`
+	Password  string    `json:"password" form:"password"`
+	Admin     bool      `json:"admin" form:"admin""`
+	CreatedAt time.Time `json:"created_at" form: "created_at"`
+	UpdatedAt time.Time `json:"updated_at" form: "updated_at"`
 }
 
 type InsertUrlRequest struct {
