@@ -35,12 +35,12 @@ func (u *UserRepository) InsertUser(username, fullname, email, password string) 
 
 	return user, nil
 }
-func (u *UserRepository) GetAllUsers() ([]models.User, error) {
+func (u *UserRepository) GetAllUsers() (*[]models.User, error) {
 	var users []models.User
 	
 	if err := u.db.Find(&users).Error; err != nil {
 		return nil, err
 	}
 
-	return users, nil
+	return &users, nil
 }

@@ -32,16 +32,16 @@ func (s *UserService) InsertUser(req *dto.InsertUserRequest) (*dto.CommonUserRes
 	}, nil
 }
 
-func (s *UserService) GetAllUsers() ([]dto.CommonUserResponse, error) {
+func (s *UserService) GetAllUsers() (*[]dto.CommonUserResponse, error) {
 	users, err := s.usersRepo.GetAllUsers()
 
 	if err != nil {
-		return []dto.CommonUserResponse{}, err
+		return &[]dto.CommonUserResponse{}, err
 	}
 
 	var data []dto.CommonUserResponse
 
-	for _, user := range users {
+	for _, user := range *users {
 		tempData := dto.CommonUserResponse{
 			ID:        user.ID,
 			Username:  user.Username,
@@ -55,5 +55,5 @@ func (s *UserService) GetAllUsers() ([]dto.CommonUserResponse, error) {
 		data = append(data, tempData)
 	}
 
-	return data, nil
+	return &data, nil
 }
