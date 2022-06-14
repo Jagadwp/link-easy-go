@@ -22,7 +22,7 @@ func (u *UrlRepository) GetUrlsByUsername(username string) ([]models.Url, error)
 }
 
 func (u *UrlRepository) InsertUrl(shortLink string, originalLink string, userID int) (*models.Url, error) {
-	var url *models.Url = &models.Url{
+	var url models.Url = models.Url{
 		ShortLink: shortLink,
 		OriginalLink: originalLink,
 		HitCounter: 0,
@@ -35,5 +35,15 @@ func (u *UrlRepository) InsertUrl(shortLink string, originalLink string, userID 
 		return &models.Url{}, err
 	}
 
-	return url, nil
+	return &url, nil
+}
+
+func (u *UrlRepository) GetAllUrlsByUserID(userID int) (*[]models.Url, error) {
+	var urls []models.Url
+	
+	if err:= u.db.Where("created_by = ?", userID).Find(&urls).Error; err != nil {
+		return &[]models.Url{}, err
+	}
+
+	return &urls, nil
 }
