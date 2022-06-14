@@ -27,7 +27,7 @@ func RegisterUserPath(e *echo.Echo, userController *controllers.UserController) 
 		return c.NoContent(200)
 	})
 	e.GET("/", func(c echo.Context) error {
-		return dto.MessageResponse(c, 200, "When Link is Easy!")
+		return dto.SuccessResponse(c, 200, "When Link is Easy!", nil)
 	})
 
 	// e.GET("/test", userController.test)
