@@ -21,9 +21,10 @@ func (u *UrlRepository) GetUrlsByUsername(username string) ([]models.Url, error)
 	return urls, nil
 }
 
-func (u *UrlRepository) InsertUrl(shortLink string, originalLink string, userID int) (*models.Url, error) {
+func (u *UrlRepository) InsertUrl(title string, shortLink string, originalLink string, userID int) (*models.Url, error) {
 	var url models.Url = models.Url{
 		ShortLink: shortLink,
+		Title: title,
 		OriginalLink: originalLink,
 		HitCounter: 0,
 		CreatedBy: userID,
@@ -46,4 +47,32 @@ func (u *UrlRepository) GetAllUrlsByUserID(userID int) (*[]models.Url, error) {
 	}
 
 	return &urls, nil
+}
+
+func (u *UrlRepository) GetUrlById(id int) (*models.Url, error) {
+	var url models.Url
+	
+	if err:= u.db.Where("id = ?", id).Find(&url).Error; err != nil {
+		return &models.Url{}, err
+	}
+
+	return &url, nil
+}
+
+func (u *UrlRepository) GetUrlByShortLink(shortLink string) (*models.Url, error) {
+	var url models.Url
+	
+	if err:= u.db.Where("short_link = ?", shortLink).Find(&url).Error; err != nil {
+		return &models.Url{}, err
+	}
+
+	return &url, nil
+}
+
+func (u *UrlRepository) UpdateUrl(url *models.Url) (*models.Url, error) {
+	if err:= u.db.Save(url).Error; err != nil {
+		return &models.Url{}, err
+	}
+
+	return url, nil
 }

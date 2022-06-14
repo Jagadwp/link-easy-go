@@ -46,3 +46,25 @@ func (ctr *UrlController) GetAllUrlsByUserID(c echo.Context) error {
 
 	return c.JSON(200, response)
 }
+
+func (ctr *UrlController) UpdateUrl(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+	
+	req := dto.UpdatetUrlRequest{}
+
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	response, err := ctr.services.UpdateUrl(id, &req)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(200, response)
+}
