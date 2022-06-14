@@ -27,11 +27,16 @@ func main() {
 	userService := services.NewUserService(usersRepo)
 	userController := controllers.NewUserController(userService)
 
+	urlsRepo := repositories.NewUrlRepository(DB)
+	urlService := services.NewUrlService(urlsRepo)
+	urlController := controllers.NewUrlController(urlService)
+
 	// create echo http
 	e := echo.New()
 
 	// register API path and handler
 	routes.RegisterUserPath(e, userController)
+	routes.UrlUserPath(e, urlController)
 
 	// run server
 	go func() {

@@ -26,3 +26,11 @@ func RegisterUserPath(e *echo.Echo, userController *controllers.UserController) 
 		return c.NoContent(200)
 	})
 }
+
+func UrlUserPath(e *echo.Echo, urlController *controllers.UrlController) {
+	if urlController == nil {
+		panic("Controller parameter cannot be nil")
+	}
+
+	e.POST("/urls", urlController.InsertUrl)
+}

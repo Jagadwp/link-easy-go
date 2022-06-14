@@ -46,5 +46,5 @@ func DB() *gorm.DB {
 
 func initMigrate() {
 	database.AutoMigrate(&model.User{})
-	// database.AutoMigrate(&_model.UrlData{})
+	database.AutoMigrate(&model.Url{})
 }
