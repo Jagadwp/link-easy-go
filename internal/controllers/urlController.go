@@ -47,6 +47,22 @@ func (ctr *UrlController) GetAllUrlsByUserID(c echo.Context) error {
 	return c.JSON(200, response)
 }
 
+func (ctr *UrlController) GetUrlById(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	response, err := ctr.services.GetUrlById(id)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(200, response)
+}
+
 func (ctr *UrlController) UpdateUrl(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 
@@ -67,4 +83,18 @@ func (ctr *UrlController) UpdateUrl(c echo.Context) error {
 	}
 
 	return c.JSON(200, response)
+}
+
+func (ctr *UrlController) DeleteUrl(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	if err := ctr.services.DeleteUrl(id); err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(200, "Url successfully deleted")
 }

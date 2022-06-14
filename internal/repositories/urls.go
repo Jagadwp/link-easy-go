@@ -76,3 +76,11 @@ func (u *UrlRepository) UpdateUrl(url *models.Url) (*models.Url, error) {
 
 	return url, nil
 }
+
+func (u *UrlRepository) DeleteUrl(url *models.Url) error {
+	if err:= u.db.Delete(url).Error; err != nil {
+		return err
+	}
+
+	return nil
+}

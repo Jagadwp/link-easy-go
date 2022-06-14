@@ -40,6 +40,7 @@ func UrlUserPath(e *echo.Echo, urlController *controllers.UrlController) {
 
 	e.POST("urls", urlController.InsertUrl)
 	e.GET("urls/user/:user_id", urlController.GetAllUrlsByUserID)
-	// e.GET("urls/:id", urlController.Get)
+	e.GET("urls/:id", urlController.GetUrlById)
 	e.PUT("urls/:id", urlController.UpdateUrl)
+	e.DELETE("urls/:id", urlController.DeleteUrl)
 }

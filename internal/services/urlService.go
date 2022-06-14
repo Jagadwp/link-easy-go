@@ -45,6 +45,16 @@ func (s *UrlService) GetAllUrlsByUserID(userID int) (*[]models.Url, error) {
 	return urls, nil
 }
 
+func (s *UrlService) GetUrlById(id int) (*models.Url, error) {
+	url, err := s.urlsRepo.GetUrlById(id)
+
+	if(err != nil) {
+		return &models.Url{}, err
+	}
+
+	return url, nil
+}
+
 func (s *UrlService) UpdateUrl(id int, req *dto.UpdatetUrlRequest) (*dto.UpdateUrlResponse, error) {
 	url, err := s.urlsRepo.GetUrlById(id)
 
@@ -80,4 +90,20 @@ func (s *UrlService) UpdateUrl(id int, req *dto.UpdatetUrlRequest) (*dto.UpdateU
 		UpdatedAt: url.UpdatedAt,
 	}, nil
 
+}
+
+func (s *UrlService) DeleteUrl(id int) error {
+	url, err := s.urlsRepo.GetUrlById(id)
+
+	if(err != nil) {
+		return err
+	}
+
+	err = s.urlsRepo.DeleteUrl(url)
+
+	if(err != nil) {
+		return err
+	}
+
+	return nil
 }
