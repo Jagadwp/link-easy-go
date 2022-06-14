@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/Jagadwp/link-easy-go/internal/models"
 	repository "github.com/Jagadwp/link-easy-go/internal/repositories"
 	"github.com/Jagadwp/link-easy-go/internal/shared/dto"
 )
@@ -28,4 +29,14 @@ func (s *UrlService) InsertUrl(req *dto.InsertUrlRequest) (*dto.InsertUrlRespons
 		CreatedAt: url.CreatedAt,
 		UpdatedAt: url.UpdatedAt,
 	}, nil
+}
+
+func (s *UrlService) GetAllUrlsByUserID(userID int) (*[]models.Url, error) {
+	urls, err := s.urlsRepo.GetAllUrlsByUserID(userID)
+
+	if(err != nil) {
+		return &[]models.Url{}, err
+	}
+
+	return urls, nil
 }
