@@ -17,13 +17,12 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 }
 
 func (u *UserRepository) InsertUser(username, fullname, email, password string) (*models.User, error) {
-	hashedPass, _ := models.Hash(password)
 
 	var user *models.User = &models.User{
 		Username:  username,
 		Fullname:  fullname,
 		Email:     email,
-		Password:  string(hashedPass),
+		Password:  password,
 		Admin:     false,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -35,12 +34,39 @@ func (u *UserRepository) InsertUser(username, fullname, email, password string) 
 
 	return user, nil
 }
+
 func (u *UserRepository) GetAllUsers() (*[]models.User, error) {
 	var users []models.User
-	
+
 	if err := u.db.Find(&users).Error; err != nil {
 		return nil, err
 	}
 
 	return &users, nil
 }
+
+func (u *UserRepository) GetUserById(id int) (*models.User, error) {
+	var user models.User
+
+	if err := u.db.First(&user, id).Error; err != nil {
+		return &models.User{}, err
+	}
+
+	return &user, nil
+}
+
+func (u *UserRepository) UpdateUser(user *models.User) (*models.User, error) {
+	if err := u.db.Save(user).Error; err != nil {
+		return &models.User{}, err
+	}
+
+	return user, nil
+}
+
+func (u *UserRepository) DeleteUser(user *models.User) error {
+	if err:= u.db.Delete(user).Error; err != nil {
+		return err
+	}
+
+	return nil
+} 

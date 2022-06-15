@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 
@@ -19,7 +20,7 @@ func NewUserController(services *services.UserService) *UserController {
 
 func (ctr *UserController) InsertUser(c echo.Context) error {
 	req := dto.InsertUserRequest{}
-	
+
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
@@ -35,18 +36,63 @@ func (ctr *UserController) InsertUser(c echo.Context) error {
 
 func (ctr *UserController) GetAllUsers(c echo.Context) error {
 	response, err := ctr.services.GetAllUsers()
-	
+
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	
+
 	return c.JSON(200, response)
 
 }
 
-// func (ctr *UserController) test(c echo.Context) error {
-	
-// 	db.Find(&user)
-// 	return c.JSON(200, response)
+func (ctr *UserController) GetUserById(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
 
-// }
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	response, err := ctr.services.GetUserById(id)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(200, response)
+}
+
+func (ctr *UserController) UpdateUser(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	req := dto.UpdateUserRequest{}
+
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	response, err := ctr.services.UpdateUser(id, &req)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(200, response)
+}
+
+func (ctr *UserController) DeleteUser(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	if err := ctr.services.DeleteUser(id); err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(200, "User successfully deleted")
+}

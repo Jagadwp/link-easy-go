@@ -19,18 +19,21 @@ func RegisterUserPath(e *echo.Echo, userController *controllers.UserController) 
 	user := e.Group("users")
 	user.POST("", userController.InsertUser)
 	user.GET("", userController.GetAllUsers)
-	// user.GET("/:id", userController.FindUserByID)
-	// user.PUT("/:id", userController.UpdateUser)
+	user.GET("/:id", userController.GetUserById)
+	user.PUT("/:id", userController.UpdateUser)
+	user.DELETE("/:id", userController.DeleteUser)
 
 	//health check
 	e.GET("/health", func(c echo.Context) error {
 		return c.NoContent(200)
 	})
+
 	e.GET("/", func(c echo.Context) error {
 		return dto.MessageResponse(c, 200, "When Link is Easy!")
 	})
 
 	// e.GET("/test", userController.test)
+
 }
 
 func UrlUserPath(e *echo.Echo, urlController *controllers.UrlController) {

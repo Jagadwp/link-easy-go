@@ -1,11 +1,7 @@
 package models
 
 import (
-	"html"
-	"strings"
 	"time"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -17,31 +13,6 @@ type User struct {
 	Admin     bool      `json:"admin" form: "admin" gorm:"default:false"`
 	CreatedAt time.Time `json:"created_at" form: "created_at"`
 	UpdatedAt time.Time `json:"updated_at" form: "updated_at"`
-}
-
-func Hash(password string) ([]byte, error) {
-	return bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-}
-
-func VerifyPassword(hashedPassword, password string) error {
-	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
-}
-
-func (u *User) BeforeSave() error {
-	hashedPassword, err := Hash(u.Password)
-	if err != nil {
-		return err
-	}
-	u.Password = string(hashedPassword)
-	return nil
-}
-
-func (u *User) Prepare() {
-	u.ID = 0
-	u.Username = html.EscapeString(strings.TrimSpace(u.Username))
-	u.Email = html.EscapeString(strings.TrimSpace(u.Email))
-	u.CreatedAt = time.Now()
-	u.UpdatedAt = time.Now()
 }
 
 //Habis implement validator
