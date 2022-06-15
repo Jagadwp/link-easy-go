@@ -38,7 +38,7 @@ type InsertUrlResponse struct {
 	UpdatedAt     time.Time `json:"updated_at"`
 }
 
-type UpdatetUrlRequest struct {
+type UpdateUrlRequest struct {
 	ID           int       `json:"id"`
 	Title        string    `json:"title" form:"title"`
 	ShortLink    string    `json:"short_link" form:"short_link"`
@@ -55,7 +55,3 @@ type UpdateUrlResponse struct {
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }
-
-// type ErrorResponse struct {
-// 	Message string `json:"message"`
-// }

@@ -55,7 +55,7 @@ func (s *UrlService) GetUrlById(id int) (*models.Url, error) {
 	return url, nil
 }
 
-func (s *UrlService) UpdateUrl(id int, req *dto.UpdatetUrlRequest) (*dto.UpdateUrlResponse, error) {
+func (s *UrlService) UpdateUrl(id int, req *dto.UpdateUrlRequest) (*dto.UpdateUrlResponse, error) {
 	url, err := s.urlsRepo.GetUrlById(id)
 
 	if(err != nil) {
