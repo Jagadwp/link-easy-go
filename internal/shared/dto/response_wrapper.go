@@ -1,51 +1,20 @@
 package dto
 
 import (
-	"net/http"
-
 	"github.com/labstack/echo/v4"
 )
 
 type Error struct {
-	Code  int    `json:"code"`
-	Error string `json:"error"`
-}
-
-type Data struct {
-	Code    int    `json:"code"`
+	Success  bool `json:"success"`
 	Message string `json:"message"`
+	ErrorCode  int    `json:"error_code"`
+	Data interface{} `json:"data"`
 }
 
-type SuccessResponseCode string
-
-//List of success response status
-const (
-	Success SuccessResponseCode = "success"
-)
-
-//SuccessResponse default payload response
-type SuccessResponse struct {
-	Code    SuccessResponseCode `json:"code"`
-	Message string              `json:"message"`
-	Data    interface{}         `json:"data"`
-}
-
-//NewSuccessResponse create new success payload
-func NewSuccessResponse(data interface{}) (int, SuccessResponse) {
-	return http.StatusOK, SuccessResponse{
-		Success,
-		"Success",
-		data,
-	}
-}
-
-//NewSuccessResponse create new success payload
-func NewSuccessResponseWithoutData() (int, SuccessResponse) {
-	return http.StatusOK, SuccessResponse{
-		Success,
-		"Success",
-		map[string]interface{}{},
-	}
+type Success struct {
+	Success  bool `json:"success"`
+	Message string `json:"message"`
+	Data interface{} `json:"data"`
 }
 
 func Response(c echo.Context, statusCode int, data interface{}) error {
@@ -55,16 +24,19 @@ func Response(c echo.Context, statusCode int, data interface{}) error {
 	return c.JSON(statusCode, data)
 }
 
-func MessageResponse(c echo.Context, statusCode int, message string) error {
-	return Response(c, statusCode, Data{
-		Code:    statusCode,
+func SuccessResponse(c echo.Context, statusCode int, message string, data interface{}) error {
+	return Response(c, statusCode, Success{
+		Success: true,
 		Message: message,
+		Data: data,
 	})
 }
 
-func ErrorResponse(c echo.Context, statusCode int, message string) error {
+func ErrorResponse(c echo.Context, statusCode int, err string) error {
 	return Response(c, statusCode, Error{
-		Code:  statusCode,
-		Error: message,
+		Success: false,
+		Message: err,
+		ErrorCode: statusCode,
+		Data: nil,
 	})
 }

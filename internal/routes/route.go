@@ -29,7 +29,7 @@ func RegisterUserPath(e *echo.Echo, userController *controllers.UserController) 
 	})
 
 	e.GET("/", func(c echo.Context) error {
-		return dto.MessageResponse(c, 200, "When Link is Easy!")
+		return dto.SuccessResponse(c, 200, "When Link is Easy!", nil)
 	})
 
 	// e.GET("/test", userController.test)
@@ -41,6 +41,9 @@ func UrlUserPath(e *echo.Echo, urlController *controllers.UrlController) {
 		panic("Controller parameter cannot be nil")
 	}
 
-	e.POST("/urls", urlController.InsertUrl)
-	e.GET("/urls/:user_id", urlController.GetAllUrlsByUserID)
+	e.POST("urls", urlController.InsertUrl)
+	e.GET("urls/user/:user_id", urlController.GetAllUrlsByUserID)
+	e.GET("urls/:id", urlController.GetUrlById)
+	e.PUT("urls/:id", urlController.UpdateUrl)
+	e.DELETE("urls/:id", urlController.DeleteUrl)
 }

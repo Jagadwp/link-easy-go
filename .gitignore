@@ -1,4 +1,4 @@
 .db
 .env
 .DS_Store
-/testing
+testing/
