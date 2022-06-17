@@ -55,6 +55,18 @@ func (u *UserRepository) GetUserById(id int) (*models.User, error) {
 	return &user, nil
 }
 
+func (u *UserRepository) GetUserByUsername(username string) (*models.User, error) {
+	var user models.User
+
+	query := u.db.Where("username = ?", username).First(&user)
+
+	if err := query.Error; err != nil {
+		return &models.User{}, err
+	}
+
+	return &user, nil
+}
+
 func (u *UserRepository) UpdateUser(user *models.User) (*models.User, error) {
 	if err := u.db.Save(user).Error; err != nil {
 		return &models.User{}, err
@@ -63,10 +75,10 @@ func (u *UserRepository) UpdateUser(user *models.User) (*models.User, error) {
 	return user, nil
 }
 
-func (u *UserRepository) DeleteUser(user *models.User) error {
-	if err:= u.db.Delete(user).Error; err != nil {
-		return err
+func (u *UserRepository) DeleteUser(user *models.User) (*models.User, error) {
+	if err := u.db.Delete(user).Error; err != nil {
+		return &models.User{}, err
 	}
 
-	return nil
-} 
+	return user, nil
+}

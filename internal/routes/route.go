@@ -2,6 +2,7 @@ package routes
 
 import (
 	"github.com/Jagadwp/link-easy-go/internal/controllers"
+	"github.com/Jagadwp/link-easy-go/internal/middleware"
 	"github.com/Jagadwp/link-easy-go/internal/shared/dto"
 	"github.com/labstack/echo/v4"
 )
@@ -11,13 +12,12 @@ func RegisterUserPath(e *echo.Echo, userController *controllers.UserController) 
 		panic("Controller parameter cannot be nil")
 	}
 
-	//authentication with Versioning endpoint
-	// auth := e.Group("auth")
-	// auth.POST("/login", authController.Login)
+	e.POST("/login", userController.Login)
+	e.POST("/register", userController.Register)
 
 	//user with Versioning endpoint
 	user := e.Group("users")
-	user.POST("", userController.InsertUser)
+	user.Use(middleware.IsAuthenticated)
 	user.GET("", userController.GetAllUsers)
 	user.GET("/:id", userController.GetUserById)
 	user.PUT("/:id", userController.UpdateUser)
@@ -45,5 +45,5 @@ func UrlUserPath(e *echo.Echo, urlController *controllers.UrlController) {
 	e.GET("urls/user/:user_id", urlController.GetAllUrlsByUserID)
 	e.GET("urls/:id", urlController.GetUrlById)
 	e.PUT("urls/:id", urlController.UpdateUrl)
-	e.DELETE("urls/:id", urlController.DeleteUrl)
+	e.DELETE("urls/:id", urlController.DeleteUrl, middleware.IsAuthenticated)
 }

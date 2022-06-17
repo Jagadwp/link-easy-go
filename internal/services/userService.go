@@ -1,11 +1,15 @@
 package services
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
+	"github.com/Jagadwp/link-easy-go/internal/models"
 	"github.com/Jagadwp/link-easy-go/internal/repositories"
 	"github.com/Jagadwp/link-easy-go/internal/services/helper"
 	"github.com/Jagadwp/link-easy-go/internal/shared/dto"
+	"github.com/dgrijalva/jwt-go"
 )
 
 type UserService struct {
@@ -16,10 +20,51 @@ func NewUserService(usersRepo *repositories.UserRepository) *UserService {
 	return &UserService{usersRepo: usersRepo}
 }
 
+func (s *UserService) Login(req *dto.LoginRequest) (*dto.LoginResponse, error) {
+	user, err := s.usersRepo.GetUserByUsername(req.Username)
+
+	if err != nil {
+		return &dto.LoginResponse{}, errors.New("username not found")
+	}
+
+	match, _ := helper.CheckPasswordHash(req.Password, user.Password)
+
+	if !match {
+		return &dto.LoginResponse{}, errors.New("hash and password doesn't match")
+	}
+
+	claims := &dto.JwtCustomClaims{
+		ID:       user.ID,
+		Username: user.Username,
+		Admin:    user.Admin,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
+		},
+	}
+	fmt.Println(time.Now().Add(time.Hour * 72))
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	fmt.Println(claims)
+
+	signedToken, err := token.SignedString([]byte("LOVEY-DOVEY-KEY"))
+	if err != nil {
+		return &dto.LoginResponse{}, errors.New("error while processing token")
+	}
+
+	return &dto.LoginResponse{
+		ID:       user.ID,
+		Username: user.Username,
+		Fullname: user.Fullname,
+		Email:    user.Email,
+		Admin:    user.Admin,
+		Token:    signedToken,
+	}, nil
+}
+
 func (s *UserService) InsertUser(req *dto.InsertUserRequest) (*dto.CommonUserResponse, error) {
 	hashedPass, _ := helper.Hash(req.Password)
 
-	user, err := s.usersRepo.InsertUser(req.Username, req.Fullname, req.Email, string(hashedPass))
+	user, err := s.usersRepo.InsertUser(req.Username, req.Fullname, req.Email, hashedPass)
 
 	if err != nil {
 		return &dto.CommonUserResponse{}, err
@@ -30,7 +75,6 @@ func (s *UserService) InsertUser(req *dto.InsertUserRequest) (*dto.CommonUserRes
 		Username:  user.Username,
 		Fullname:  user.Fullname,
 		Email:     user.Email,
-		Password:  user.Password,
 		Admin:     user.Admin,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
@@ -52,7 +96,6 @@ func (s *UserService) GetAllUsers() (*[]dto.CommonUserResponse, error) {
 			Username:  user.Username,
 			Fullname:  user.Fullname,
 			Email:     user.Email,
-			Password:  user.Password,
 			Admin:     user.Admin,
 			CreatedAt: user.CreatedAt,
 			UpdatedAt: user.UpdatedAt,
@@ -75,7 +118,6 @@ func (s *UserService) GetUserById(id int) (*dto.CommonUserResponse, error) {
 		Username:  user.Username,
 		Fullname:  user.Fullname,
 		Email:     user.Email,
-		Password:  user.Password,
 		Admin:     user.Admin,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
@@ -100,7 +142,7 @@ func (s *UserService) UpdateUser(id int, req *dto.UpdateUserRequest) (*dto.Commo
 
 	if req.Password != "" {
 		hashedPass, _ := helper.Hash(req.Password)
-		user.Password = string(hashedPass)
+		user.Password = hashedPass
 	}
 
 	user.Admin = req.Admin
@@ -118,25 +160,24 @@ func (s *UserService) UpdateUser(id int, req *dto.UpdateUserRequest) (*dto.Commo
 		Username:  user.Username,
 		Fullname:  user.Fullname,
 		Email:     user.Email,
-		Password:  user.Password,
 		Admin:     user.Admin,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	}, nil
 }
 
-func (s *UserService) DeleteUser(id int) error {
+func (s *UserService) DeleteUser(id int) (*models.User, error) {
 	user, err := s.usersRepo.GetUserById(id)
 
 	if err != nil {
-		return err
+		return &models.User{}, err
 	}
 
-	err = s.usersRepo.DeleteUser(user)
+	user, err = s.usersRepo.DeleteUser(user)
 
 	if err != nil {
-		return err
+		return &models.User{}, err
 	}
 
-	return nil
+	return user, nil
 }

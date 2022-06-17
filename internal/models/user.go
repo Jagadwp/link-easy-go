@@ -13,6 +13,7 @@ type User struct {
 	Admin     bool      `json:"admin" form: "admin" gorm:"default:false"`
 	CreatedAt time.Time `json:"created_at" form: "created_at"`
 	UpdatedAt time.Time `json:"updated_at" form: "updated_at"`
+	Urls      []Url
 }
 
 //Habis implement validator

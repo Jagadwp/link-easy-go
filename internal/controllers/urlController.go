@@ -9,8 +9,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 )
+
 type UrlController struct {
-  services *services.UrlService
+	services *services.UrlService
 }
 
 func NewUrlController(services *services.UrlService) *UrlController {
@@ -78,7 +79,7 @@ func (ctr *UrlController) UpdateUrl(c echo.Context) error {
 	if (*getUrlResponse).ID == 0 {
 		return dto.ErrorResponse(c, http.StatusNotFound, "Url not found")
 	}
-	
+
 	req := dto.UpdateUrlRequest{}
 	if err := c.Bind(&req); err != nil {
 		return dto.ErrorResponse(c, http.StatusBadRequest, "Required fields are empty or not valid")
