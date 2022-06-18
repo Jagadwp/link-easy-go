@@ -13,5 +13,4 @@ type Url struct {
 	CreatedBy    int       `json:"created_by" form:"created_by"`
 	CreatedAt    time.Time `json:"created_at" form: "created_at"`
 	UpdatedAt    time.Time `json:"updated_at" form: "updated_at"`
-	UserID       int
 }

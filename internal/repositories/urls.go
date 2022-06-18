@@ -1,9 +1,12 @@
 package repositories
 
 import (
+	"errors"
 	"time"
 
 	"github.com/Jagadwp/link-easy-go/internal/models"
+	"github.com/Jagadwp/link-easy-go/internal/shared"
+	"github.com/jackc/pgconn"
 	"gorm.io/gorm"
 )
 
@@ -31,8 +34,13 @@ func (u *UrlRepository) InsertUrl(title string, shortLink string, originalLink s
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
-	
+
 	if err:= u.db.Create(&url).Error; err != nil {
+		var perr *pgconn.PgError
+		errors.As(err, &perr)
+		if perr.Code == shared.CODE_ERROR_DUPLICATE_KEY {
+			return &models.Url{}, shared.ErrUrlShortLinkAlreadyExist
+		}
 		return &models.Url{}, err
 	}
 
