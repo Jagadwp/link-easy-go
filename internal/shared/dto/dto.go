@@ -56,7 +56,7 @@ type InsertUrlRequest struct {
 	Title        string `json:"title" form:"title"`
 	ShortLink    string `json:"short_link" form:"short_link"`
 	OriginalLink string `json:"original_link" form:"original_link"`
-	UserID       int    `json:"user_id" form:"user_id"`
+	// UserID       int    `json:"user_id" form:"user_id"`
 }
 
 type InsertUrlResponse struct {

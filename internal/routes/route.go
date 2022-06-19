@@ -41,9 +41,12 @@ func UrlUserPath(e *echo.Echo, urlController *controllers.UrlController) {
 		panic("Controller parameter cannot be nil")
 	}
 
-	e.POST("urls", urlController.InsertUrl)
-	e.GET("urls/user/:user_id", urlController.GetAllUrlsByUserID)
-	e.GET("urls/:id", urlController.GetUrlById)
-	e.PUT("urls/:id", urlController.UpdateUrl)
-	e.DELETE("urls/:id", urlController.DeleteUrl, middleware.IsAuthenticated)
+	url := e.Group("urls")
+	url.Use(middleware.IsAuthenticated)
+
+	url.POST("urls", urlController.InsertUrl)
+	url.GET("urls/user/:user_id", urlController.GetAllUrlsByUserID)
+	url.GET("urls/:id", urlController.GetUrlById)
+	url.PUT("urls/:id", urlController.UpdateUrl)
+	url.DELETE("urls/:id", urlController.DeleteUrl)
 }

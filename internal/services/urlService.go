@@ -16,8 +16,8 @@ func NewUrlService(urlsRepo *repository.UrlRepository) *UrlService {
 	return &UrlService{urlsRepo: urlsRepo}
 }
 
-func (s *UrlService) InsertUrl(req *dto.InsertUrlRequest) (*dto.InsertUrlResponse, error) {
-	url, err := s.urlsRepo.InsertUrl(req.Title, req.ShortLink, req.OriginalLink, req.UserID)
+func (s *UrlService) InsertUrl(title string, shortLink string, originalLink string, id int) (*dto.InsertUrlResponse, error) {
+	url, err := s.urlsRepo.InsertUrl(title, shortLink, originalLink, id)
 
 	if(err != nil) {
 		return &dto.InsertUrlResponse{}, err
