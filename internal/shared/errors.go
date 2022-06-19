@@ -10,6 +10,8 @@ var (
 	ErrBadRequest          = fmt.Errorf("bad request")
 	ErrInternalServerError = fmt.Errorf("internal server error")
 	ErrFailedToProcessRequest = fmt.Errorf("failed to process request")
+	ErrForbiddenToAccess = fmt.Errorf("you are forbidden to access this resource")
+	ErrParamIDNotValid = fmt.Errorf("parameter id is not valid")
 
 	ErrJWTInvalid = fmt.Errorf("invalid token")
 	ErrJWTExpired = fmt.Errorf("token already expired")

@@ -16,12 +16,6 @@ type User struct {
 	Urls      []Url     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 }
 
-type JwtUserInfo struct {
-	ID       int
-	Username string
-	Admin    bool
-}
-
 //Habis implement validator
 // type User struct {
 // 	ID        int       `json:"id" form:"id" gorm:"primaryKey"`

@@ -13,6 +13,12 @@ type JwtCustomClaims struct {
 	jwt.StandardClaims
 }
 
+type JwtUserInfo struct {
+	ID       int
+	Username string
+	Admin    bool
+}
+
 type LoginRequest struct {
 	Username string `json:"username" form:"username"`
 	Password string `json:"password" form:"password"`
@@ -98,4 +104,11 @@ type UpdateUrlResponse struct {
 	UserID       int       `json:"user_id"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+type PublicUrlResponse struct {
+	ID           int       `json:"id"`
+	Title        string    `json:"title"`
+	ShortLink    string    `json:"short_link"`
+	OriginalLink string    `json:"original_link"`
 }

@@ -64,11 +64,11 @@ func (s *UserService) Login(req *dto.LoginRequest) (*dto.LoginResponse, error) {
 	}, nil
 }
 
-func (s *UserService) GetCurrentUser(c echo.Context) (userInfo *models.JwtUserInfo, ok bool) {
+func (s *UserService) GetCurrentUser(c echo.Context) (userInfo *dto.JwtUserInfo, ok bool) {
 	user, ok := c.Get("user").(*goJwt.Token)
 
 	if !ok {
-		return &models.JwtUserInfo{}, ok
+		return &dto.JwtUserInfo{}, ok
 	}
 
     claims := user.Claims.(goJwt.MapClaims)
@@ -76,7 +76,7 @@ func (s *UserService) GetCurrentUser(c echo.Context) (userInfo *models.JwtUserIn
     userID := claims["id"].(float64)
 	isAdmin := claims["admin"].(bool)
 
-	newUser := &models.JwtUserInfo{
+	newUser := &dto.JwtUserInfo{
 		ID:       int(userID),
 		Username: username,
 		Admin:    isAdmin,

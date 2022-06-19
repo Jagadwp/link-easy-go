@@ -86,11 +86,18 @@ func (ctr *UrlController) GetAllUrlsByUserID(c echo.Context) error {
 	return dto.SuccessResponse(c, http.StatusOK, "Urls successfully fetched", response)
 }
 
-func (ctr *UrlController) GetUrlById(c echo.Context) error {
+func (ctr *UrlController) GetUrlUserById(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "Parameter id is not valid")
+		return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrParamIDNotValid.Error())
 	}
+
+	currentUser, ok := ctr.userService.GetCurrentUser(c)
+	if !ok {
+		return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrJWTInvalid.Error())
+	}
+
+	userID := currentUser.ID
 
 	response, err := ctr.urlService.GetUrlById(id)
 	if err != nil {
@@ -100,7 +107,13 @@ func (ctr *UrlController) GetUrlById(c echo.Context) error {
 		return dto.ErrorResponse(c, http.StatusNotFound, shared.ErrUrlNotFound.Error())
 	}
 
-	return dto.SuccessResponse(c, http.StatusOK, "Url successfully fetched", response)
+	if (ctr.urlService.IsUserAllowedToEdit(userID, response.ID)) {
+		return dto.SuccessResponse(c, http.StatusOK, "Url successfully fetched", response)
+	} else {
+		return dto.ErrorResponse(c, http.StatusForbidden, shared.ErrForbiddenToAccess.Error())
+	}
+
+
 }
 
 func (ctr *UrlController) UpdateUrl(c echo.Context) error {
