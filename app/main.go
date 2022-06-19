@@ -37,6 +37,7 @@ func main() {
 	// register API path and handler
 	routes.RegisterUserPath(e, userController)
 	routes.UrlUserPath(e, urlController)
+	routes.PublicPath(e, urlController)
 
 	// run server
 	go func() {

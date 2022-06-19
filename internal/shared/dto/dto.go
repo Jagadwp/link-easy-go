@@ -106,8 +106,6 @@ type UpdateUrlResponse struct {
 }
 
 type PublicUrlResponse struct {
-	ID           int       `json:"id"`
-	Title        string    `json:"title"`
 	ShortLink    string    `json:"short_link"`
 	OriginalLink string    `json:"original_link"`
 }

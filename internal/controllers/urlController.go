@@ -117,6 +117,20 @@ func (ctr *UrlController) GetUrlUserById(c echo.Context) error {
 	}
 }
 
+func (ctr *UrlController) GetUrlPublicByShortLink(c echo.Context) error {
+	shortLink := c.Param("short_link")
+
+	response, err := ctr.urlService.GetUrlByShortLink(shortLink)
+	if err != nil {
+		return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
+	}
+	if (*response).ShortLink == "" {
+		return dto.ErrorResponse(c, http.StatusNotFound, shared.ErrUrlNotFound.Error())
+	}
+
+	return dto.SuccessResponse(c, http.StatusOK, "Url successfully fetched", response)	
+}
+
 func (ctr *UrlController) UpdateUrl(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {

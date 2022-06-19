@@ -20,7 +20,7 @@ func NewUrlService(urlsRepo *repository.UrlRepository) *UrlService {
 
 func (s *UrlService) CreateShortUrl(req *dto.GenerateUrlRequest) (*dto.InsertUrlResponse, error) {
 	shortLink, errNanoId := helper.GenerateLink()
-	shortLink = "https://linkeasy.in/" + shortLink
+	// shortLink = "https://linkeasy.in/" + shortLink
 
 	if errNanoId != nil {
 		return &dto.InsertUrlResponse{}, errNanoId
@@ -45,8 +45,6 @@ func (s *UrlService) CreateShortUrl(req *dto.GenerateUrlRequest) (*dto.InsertUrl
 }
 
 func (s *UrlService) InsertUrl(title, shortLink, originalLink string, id *int) (*dto.InsertUrlResponse, error) {
-	shortLink = "https://linkeasy.in/" + shortLink
-	
 	url, err := s.urlsRepo.InsertUrl(title, shortLink, originalLink, id)
 
 	if err != nil {
@@ -81,6 +79,18 @@ func (s *UrlService) GetUrlById(id int) (*models.Url, error) {
 	}
 
 	return url, nil
+}
+
+func (s *UrlService) GetUrlByShortLink(shortLink string) (*dto.PublicUrlResponse, error) {
+	url, err := s.urlsRepo.GetUrlByShortLink(shortLink)
+	if err != nil {
+		return &dto.PublicUrlResponse{}, err
+	}
+
+	return &dto.PublicUrlResponse{
+		ShortLink: url.ShortLink,
+		OriginalLink: url.OriginalLink,
+	}, nil
 }
 
 func (s *UrlService) UpdateUrl(id int, req *dto.UpdateUrlRequest) (*dto.UpdateUrlResponse, error) {

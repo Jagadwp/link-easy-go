@@ -52,3 +52,12 @@ func UrlUserPath(e *echo.Echo, urlController *controllers.UrlController) {
 	url.PUT("/:id", urlController.UpdateUrl)
 	url.DELETE("/:id", urlController.DeleteUrl)
 }
+
+func PublicPath(e *echo.Echo, urlController *controllers.UrlController) {
+	if urlController == nil {
+		panic("Controller parameter cannot be nil")
+	}
+
+	public := e.Group("public")
+	public.GET("/:short_link", urlController.GetUrlPublicByShortLink)
+}
