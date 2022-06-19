@@ -43,11 +43,11 @@ func (s *UserService) Login(req *dto.LoginRequest) (*dto.LoginResponse, error) {
 		},
 	}
 	fmt.Println(time.Now().Add(time.Hour * 72))
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.NewWithClaims(config.JWT_SIGNING_METHOD, claims)
 
 	fmt.Println(claims)
 
-	signedToken, err := token.SignedString([]byte(config.JWT_SECRET))
+	signedToken, err := token.SignedString([]byte(config.JWT_SIGNATURE_KEY))
 	if err != nil {
 		return &dto.LoginResponse{}, errors.New("error while processing token")
 	}

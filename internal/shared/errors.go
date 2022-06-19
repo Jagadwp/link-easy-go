@@ -11,6 +11,9 @@ var (
 	ErrInternalServerError = fmt.Errorf("internal server error")
 	ErrFailedToProcessRequest = fmt.Errorf("failed to process request")
 
+	ErrJWTInvalid = fmt.Errorf("invalid token")
+	ErrJWTExpired = fmt.Errorf("token already expired")
+
 	ErrUserAlreadyExist = fmt.Errorf("user already exist")
 
 	ErrUrlShortLinkAlreadyExist = fmt.Errorf("short link already exist")

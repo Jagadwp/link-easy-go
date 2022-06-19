@@ -43,10 +43,10 @@ func (s *UrlService) CreateShortUrl(req *dto.GenerateUrlRequest) (*dto.InsertUrl
 	}, nil
 }
 
-func (s *UrlService) InsertUrl(req *dto.InsertUrlRequest) (*dto.InsertUrlResponse, error) {
-	shortLink :=  "https://linkeasy.in/" + req.ShortLink
-
-	url, err := s.urlsRepo.InsertUrl(req.Title, shortLink, req.OriginalLink, req.UserID)
+func (s *UrlService) InsertUrl(title, shortLink, originalLink string, id *int) (*dto.InsertUrlResponse, error) {
+	shortLink = "https://linkeasy.in/" + shortLink
+	
+	url, err := s.urlsRepo.InsertUrl(title, shortLink, originalLink, id)
 
 	if err != nil {
 		return &dto.InsertUrlResponse{}, err

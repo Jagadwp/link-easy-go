@@ -2,12 +2,14 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/Jagadwp/link-easy-go/internal/services"
 	"github.com/Jagadwp/link-easy-go/internal/shared"
 	"github.com/Jagadwp/link-easy-go/internal/shared/dto"
+	"github.com/golang-jwt/jwt"
 
 	"github.com/labstack/echo/v4"
 )
@@ -37,13 +39,22 @@ func (ctr *UrlController) CreateShortUrl(c echo.Context) error {
 }
 
 func (ctr *UrlController) InsertUrl(c echo.Context) error {
+
+	user := c.Get("user").(*jwt.Token)
+	fmt.Println("user: ", user)
+	claims := user.Claims.(jwt.MapClaims)
+	fmt.Println("claims: ", claims)
+	tempUserID := claims["id"].(float64)
+	userID := int(tempUserID)
+
+
 	req := dto.InsertUrlRequest{}
 
 	if err := c.Bind(&req); err != nil {
 		return dto.ErrorResponse(c, http.StatusBadRequest, shared.MESSAGE_FIELD_REQUIRED)
 	}
 
-	response, err := ctr.services.InsertUrl(&req)
+	response, err := ctr.services.InsertUrl(req.Title, req.ShortLink, req.OriginalLink, &userID)
 	if err != nil {
 		if errors.Is(err, shared.ErrUrlShortLinkAlreadyExist) {
 			return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrUrlShortLinkAlreadyExist.Error())
