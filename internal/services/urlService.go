@@ -136,3 +136,15 @@ func (s *UrlService) DeleteUrl(id int) (*models.Url, error) {
 
 	return url, nil
 }
+
+func (s *UrlService) IsUserAllowedToEdit(userID int, urlID int) (bool) {
+	url, err := s.urlsRepo.GetUrlById(urlID)
+	if(err != nil) {
+		return false
+	}
+
+	if(*url.UserID == userID) {
+		return true
+	}
+	return false
+}

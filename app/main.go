@@ -29,7 +29,7 @@ func main() {
 
 	urlsRepo := repositories.NewUrlRepository(DB)
 	urlService := services.NewUrlService(urlsRepo)
-	urlController := controllers.NewUrlController(urlService)
+	urlController := controllers.NewUrlController(urlService, userService)
 
 	// create echo http
 	e := echo.New()

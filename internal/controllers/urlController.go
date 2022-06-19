@@ -2,24 +2,28 @@ package controllers
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/Jagadwp/link-easy-go/internal/services"
 	"github.com/Jagadwp/link-easy-go/internal/shared"
 	"github.com/Jagadwp/link-easy-go/internal/shared/dto"
-	"github.com/golang-jwt/jwt"
 
 	"github.com/labstack/echo/v4"
 )
 
 type UrlController struct {
-	services *services.UrlService
+	urlService *services.UrlService
+	userService *services.UserService
 }
 
-func NewUrlController(services *services.UrlService) *UrlController {
-	return &UrlController{services: services}
+func NewUrlController(
+	urlService *services.UrlService,
+	userService *services.UserService) *UrlController {
+	return &UrlController{
+		urlService: urlService,
+		userService: userService,
+	}
 }
 
 func (ctr *UrlController) CreateShortUrl(c echo.Context) error {
@@ -29,7 +33,7 @@ func (ctr *UrlController) CreateShortUrl(c echo.Context) error {
 		return dto.ErrorResponse(c, http.StatusBadRequest, shared.MESSAGE_FIELD_REQUIRED)
 	}
 
-	response, err := ctr.services.CreateShortUrl(&req)
+	response, err := ctr.urlService.CreateShortUrl(&req)
 
 	if err != nil {
 		return dto.ErrorResponse(c, http.StatusInternalServerError, "Failed to process request")
@@ -39,22 +43,19 @@ func (ctr *UrlController) CreateShortUrl(c echo.Context) error {
 }
 
 func (ctr *UrlController) InsertUrl(c echo.Context) error {
+	currentUser, ok := ctr.userService.GetCurrentUser(c)
+	if !ok {
+		return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrJWTInvalid.Error())
+	}
 
-	user := c.Get("user").(*jwt.Token)
-	fmt.Println("user: ", user)
-	claims := user.Claims.(jwt.MapClaims)
-	fmt.Println("claims: ", claims)
-	tempUserID := claims["id"].(float64)
-	userID := int(tempUserID)
-
-
+	userID := currentUser.ID
 	req := dto.InsertUrlRequest{}
 
 	if err := c.Bind(&req); err != nil {
 		return dto.ErrorResponse(c, http.StatusBadRequest, shared.MESSAGE_FIELD_REQUIRED)
 	}
 
-	response, err := ctr.services.InsertUrl(req.Title, req.ShortLink, req.OriginalLink, &userID)
+	response, err := ctr.urlService.InsertUrl(req.Title, req.ShortLink, req.OriginalLink, &userID)
 	if err != nil {
 		if errors.Is(err, shared.ErrUrlShortLinkAlreadyExist) {
 			return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrUrlShortLinkAlreadyExist.Error())
@@ -67,12 +68,14 @@ func (ctr *UrlController) InsertUrl(c echo.Context) error {
 }
 
 func (ctr *UrlController) GetAllUrlsByUserID(c echo.Context) error {
-	userID, err := strconv.Atoi(c.Param("user_id"))
-	if err != nil {
-		return dto.ErrorResponse(c, http.StatusBadRequest, "Parameter id is not valid")
+	currentUser, ok := ctr.userService.GetCurrentUser(c)
+	if !ok {
+		return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrJWTInvalid.Error())
 	}
 
-	response, err := ctr.services.GetAllUrlsByUserID(userID)
+	userID := currentUser.ID
+
+	response, err := ctr.urlService.GetAllUrlsByUserID(userID)
 	if err != nil {
 		return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
 	}
@@ -89,7 +92,7 @@ func (ctr *UrlController) GetUrlById(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "Parameter id is not valid")
 	}
 
-	response, err := ctr.services.GetUrlById(id)
+	response, err := ctr.urlService.GetUrlById(id)
 	if err != nil {
 		return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
 	}
@@ -106,7 +109,7 @@ func (ctr *UrlController) UpdateUrl(c echo.Context) error {
 		return dto.ErrorResponse(c, http.StatusBadRequest, "Parameter id is not valid")
 	}
 
-	getUrlResponse, err := ctr.services.GetUrlById(id)
+	getUrlResponse, err := ctr.urlService.GetUrlById(id)
 	if err != nil {
 		return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
 	}
@@ -119,7 +122,7 @@ func (ctr *UrlController) UpdateUrl(c echo.Context) error {
 		return dto.ErrorResponse(c, http.StatusBadRequest, shared.MESSAGE_FIELD_REQUIRED)
 	}
 
-	updateResponse, err := ctr.services.UpdateUrl(id, &req)
+	updateResponse, err := ctr.urlService.UpdateUrl(id, &req)
 	if err != nil {
 		return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
 	}
@@ -133,7 +136,7 @@ func (ctr *UrlController) DeleteUrl(c echo.Context) error {
 		return dto.ErrorResponse(c, http.StatusBadRequest, "Parameter id is not valid")
 	}
 
-	getUrlResponse, err := ctr.services.GetUrlById(id)
+	getUrlResponse, err := ctr.urlService.GetUrlById(id)
 	if err != nil {
 		return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
 	}
@@ -141,7 +144,7 @@ func (ctr *UrlController) DeleteUrl(c echo.Context) error {
 		return dto.ErrorResponse(c, http.StatusNotFound, shared.ErrUrlNotFound.Error())
 	}
 
-	deleteResponse, err := ctr.services.DeleteUrl(id)
+	deleteResponse, err := ctr.urlService.DeleteUrl(id)
 	if err != nil {
 		return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
 	}

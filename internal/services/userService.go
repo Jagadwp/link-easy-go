@@ -11,6 +11,8 @@ import (
 	"github.com/Jagadwp/link-easy-go/internal/shared/config"
 	"github.com/Jagadwp/link-easy-go/internal/shared/dto"
 	"github.com/dgrijalva/jwt-go"
+	goJwt "github.com/golang-jwt/jwt"
+	"github.com/labstack/echo/v4"
 )
 
 type UserService struct {
@@ -60,6 +62,27 @@ func (s *UserService) Login(req *dto.LoginRequest) (*dto.LoginResponse, error) {
 		Admin:    user.Admin,
 		Token:    signedToken,
 	}, nil
+}
+
+func (s *UserService) GetCurrentUser(c echo.Context) (userInfo *models.JwtUserInfo, ok bool) {
+	user, ok := c.Get("user").(*goJwt.Token)
+
+	if !ok {
+		return &models.JwtUserInfo{}, ok
+	}
+
+    claims := user.Claims.(goJwt.MapClaims)
+	username := claims["username"].(string)
+    userID := claims["id"].(float64)
+	isAdmin := claims["admin"].(bool)
+
+	newUser := &models.JwtUserInfo{
+		ID:       int(userID),
+		Username: username,
+		Admin:    isAdmin,
+	}
+	
+	return newUser, true
 }
 
 func (s *UserService) InsertUser(req *dto.InsertUserRequest) (*dto.CommonUserResponse, error) {
