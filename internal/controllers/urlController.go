@@ -20,6 +20,22 @@ func NewUrlController(services *services.UrlService) *UrlController {
 	return &UrlController{services: services}
 }
 
+func (ctr *UrlController) CreateShortUrl(c echo.Context) error {
+	req := dto.GenerateUrlRequest{}
+
+	if err := c.Bind(&req); err != nil {
+		return dto.ErrorResponse(c, http.StatusBadRequest, shared.MESSAGE_FIELD_REQUIRED)
+	}
+
+	response, err := ctr.services.CreateShortUrl(&req)
+
+	if err != nil {
+		return dto.ErrorResponse(c, http.StatusInternalServerError, "Failed to process request")
+	}
+
+	return dto.SuccessResponse(c, http.StatusOK, "Generated Url successfully inserted", response)
+}
+
 func (ctr *UrlController) InsertUrl(c echo.Context) error {
 	req := dto.InsertUrlRequest{}
 

@@ -41,6 +41,7 @@ func UrlUserPath(e *echo.Echo, urlController *controllers.UrlController) {
 		panic("Controller parameter cannot be nil")
 	}
 
+	e.POST("urls/generate", urlController.CreateShortUrl)
 	e.POST("urls", urlController.InsertUrl)
 	e.GET("urls/user/:user_id", urlController.GetAllUrlsByUserID)
 	e.GET("urls/:id", urlController.GetUrlById)

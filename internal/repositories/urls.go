@@ -20,22 +20,46 @@ func NewUrlRepository(db *gorm.DB) *UrlRepository {
 
 func (u *UrlRepository) GetUrlsByUsername(username string) ([]models.Url, error) {
 	var urls []models.Url
-	u.db.Where("created_by = ?", username).Find(&urls)
+	u.db.Where("user_id = ?", username).Find(&urls)
 	return urls, nil
 }
 
-func (u *UrlRepository) InsertUrl(title string, shortLink string, originalLink string, userID int) (*models.Url, error) {
+func (u *UrlRepository) CreateShortUrl(title, originalLink, shortLink string, userID *int) (*models.Url, error) {
+	//UserID itu pointer, tapi yg masuk value aslinya (int) 👍🏻
 	var url models.Url = models.Url{
-		ShortLink: shortLink,
-		Title: title,
+		Title:        title,
+		ShortLink:    shortLink,
 		OriginalLink: originalLink,
-		HitCounter: 0,
-		CreatedBy: userID,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		HitCounter:   0,
+		UserID:       userID,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
 	}
 
-	if err:= u.db.Create(&url).Error; err != nil {
+	if err := u.db.Create(&url).Error; err != nil {
+		var perr *pgconn.PgError
+		errors.As(err, &perr)
+		if perr.Code == shared.CODE_ERROR_DUPLICATE_KEY {
+			return &models.Url{}, shared.ErrUrlShortLinkAlreadyExist
+		}
+		return &models.Url{}, err
+	}
+
+	return &url, nil
+}
+
+func (u *UrlRepository) InsertUrl(title string, shortLink string, originalLink string, userID *int) (*models.Url, error) {
+	var url models.Url = models.Url{
+		ShortLink:    shortLink,
+		Title:        title,
+		OriginalLink: originalLink,
+		HitCounter:   0,
+		UserID:       userID,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+	}
+
+	if err := u.db.Create(&url).Error; err != nil {
 		var perr *pgconn.PgError
 		errors.As(err, &perr)
 		if perr.Code == shared.CODE_ERROR_DUPLICATE_KEY {
@@ -49,8 +73,8 @@ func (u *UrlRepository) InsertUrl(title string, shortLink string, originalLink s
 
 func (u *UrlRepository) GetAllUrlsByUserID(userID int) (*[]models.Url, error) {
 	var urls []models.Url
-	
-	if err:= u.db.Where("created_by = ?", userID).Find(&urls).Error; err != nil {
+
+	if err := u.db.Where("user_id = ?", userID).Find(&urls).Error; err != nil {
 		return &[]models.Url{}, err
 	}
 
@@ -59,8 +83,8 @@ func (u *UrlRepository) GetAllUrlsByUserID(userID int) (*[]models.Url, error) {
 
 func (u *UrlRepository) GetUrlById(id int) (*models.Url, error) {
 	var url models.Url
-	
-	if err:= u.db.Where("id = ?", id).Find(&url).Error; err != nil {
+
+	if err := u.db.Where("id = ?", id).Find(&url).Error; err != nil {
 		return &models.Url{}, err
 	}
 
@@ -69,8 +93,8 @@ func (u *UrlRepository) GetUrlById(id int) (*models.Url, error) {
 
 func (u *UrlRepository) GetUrlByShortLink(shortLink string) (*models.Url, error) {
 	var url models.Url
-	
-	if err:= u.db.Where("short_link = ?", shortLink).Find(&url).Error; err != nil {
+
+	if err := u.db.Where("short_link = ?", shortLink).Find(&url).Error; err != nil {
 		return &models.Url{}, err
 	}
 
@@ -78,7 +102,7 @@ func (u *UrlRepository) GetUrlByShortLink(shortLink string) (*models.Url, error)
 }
 
 func (u *UrlRepository) UpdateUrl(url *models.Url) (*models.Url, error) {
-	if err:= u.db.Save(url).Error; err != nil {
+	if err := u.db.Save(url).Error; err != nil {
 		return &models.Url{}, err
 	}
 
@@ -86,7 +110,7 @@ func (u *UrlRepository) UpdateUrl(url *models.Url) (*models.Url, error) {
 }
 
 func (u *UrlRepository) DeleteUrl(url *models.Url) (*models.Url, error) {
-	if err:= u.db.Delete(url).Error; err != nil {
+	if err := u.db.Delete(url).Error; err != nil {
 		return &models.Url{}, err
 	}
 

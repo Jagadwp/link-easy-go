@@ -17,7 +17,7 @@ var e error
 
 func DatabaseInit() {
 
-	err := godotenv.Load(config.EnvPath)
+	err := godotenv.Load(config.ENV_PATH)
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
@@ -37,7 +37,7 @@ func DatabaseInit() {
 
 	fmt.Println("DB Connected")
 
-	initMigrate()
+	// initMigrate()
 }
 
 func DB() *gorm.DB {

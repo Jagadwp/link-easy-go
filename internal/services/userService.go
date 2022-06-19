@@ -8,6 +8,7 @@ import (
 	"github.com/Jagadwp/link-easy-go/internal/models"
 	"github.com/Jagadwp/link-easy-go/internal/repositories"
 	"github.com/Jagadwp/link-easy-go/internal/services/helper"
+	"github.com/Jagadwp/link-easy-go/internal/shared/config"
 	"github.com/Jagadwp/link-easy-go/internal/shared/dto"
 	"github.com/dgrijalva/jwt-go"
 )
@@ -38,7 +39,7 @@ func (s *UserService) Login(req *dto.LoginRequest) (*dto.LoginResponse, error) {
 		Username: user.Username,
 		Admin:    user.Admin,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
+			ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
 		},
 	}
 	fmt.Println(time.Now().Add(time.Hour * 72))
@@ -46,7 +47,7 @@ func (s *UserService) Login(req *dto.LoginRequest) (*dto.LoginResponse, error) {
 
 	fmt.Println(claims)
 
-	signedToken, err := token.SignedString([]byte("LOVEY-DOVEY-KEY"))
+	signedToken, err := token.SignedString([]byte(config.JWT_SECRET))
 	if err != nil {
 		return &dto.LoginResponse{}, errors.New("error while processing token")
 	}

@@ -70,10 +70,6 @@ func (ctr *UserController) GetUserById(c echo.Context) error {
 
 	response, err := ctr.services.GetUserById(id)
 
-	if err != nil {
-		return dto.ErrorResponse(c, http.StatusInternalServerError, "Failed to process request")
-	}
-
 	if (*response).ID == 0 {
 		return dto.ErrorResponse(c, http.StatusNotFound, "User not found")
 	}
@@ -89,10 +85,6 @@ func (ctr *UserController) UpdateUser(c echo.Context) error {
 	}
 
 	getUserResponse, err := ctr.services.GetUserById(id)
-
-	if err != nil {
-		return dto.ErrorResponse(c, http.StatusInternalServerError, "Failed to process request")
-	}
 
 	if (*getUserResponse).ID == 0 {
 		return dto.ErrorResponse(c, http.StatusNotFound, "User not found")
@@ -120,10 +112,6 @@ func (ctr *UserController) DeleteUser(c echo.Context) error {
 	}
 
 	getUserResponse, err := ctr.services.GetUserById(id)
-
-	if err != nil {
-		return dto.ErrorResponse(c, http.StatusInternalServerError, "Failed to process request")
-	}
 
 	if (*getUserResponse).ID == 0 {
 		return dto.ErrorResponse(c, http.StatusNotFound, "User not found")

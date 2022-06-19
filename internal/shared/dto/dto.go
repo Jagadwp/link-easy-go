@@ -13,6 +13,22 @@ type JwtCustomClaims struct {
 	jwt.StandardClaims
 }
 
+type LoginRequest struct {
+	Username string `json:"username" form:"username"`
+	Password string `json:"password" form:"password"`
+}
+
+type LoginResponse struct {
+	ID       int    `json:"id" form:"id"`
+	Username string `json:"username" form:"username"`
+	Token    string `json:"token" form:"token"`
+	Fullname string `json:"fullname" form: "fullname"`
+	Email    string `json:"email" form:"email"`
+	Admin    bool   `json:"admin" form:"admin""`
+}
+
+// User Data Transfer Object
+
 type UpdateUserRequest struct {
 	Username string `json:"username" form:"username"`
 	Fullname string `json:"fullname" form: "fullname"`
@@ -28,19 +44,6 @@ type InsertUserRequest struct {
 	Password string `json:"password" form:"password"`
 }
 
-type LoginRequest struct {
-	Username string `json:"username" form:"username"`
-	Password string `json:"password" form:"password"`
-}
-
-type LoginResponse struct {
-	ID       int    `json:"id" form:"id"`
-	Username string `json:"username" form:"username"`
-	Token    string `json:"token" form:"token"`
-	Fullname string `json:"fullname" form: "fullname"`
-	Email    string `json:"email" form:"email"`
-	Admin    bool   `json:"admin" form:"admin""`
-}
 
 type CommonUserResponse struct {
 	ID        int       `json:"id" form:"id"`
@@ -52,12 +55,21 @@ type CommonUserResponse struct {
 	UpdatedAt time.Time `json:"updated_at" form: "updated_at"`
 }
 
+// URL Data Transfer Object
+
+type GenerateUrlRequest struct {
+	Title        string `json:"title" form:"title"`
+	OriginalLink string `json:"original_link" form:"original_link"`
+	UserID       *int    `json:"user_id" form:"user_id"`
+}
+
 type InsertUrlRequest struct {
 	Title        string `json:"title" form:"title"`
 	ShortLink    string `json:"short_link" form:"short_link"`
 	OriginalLink string `json:"original_link" form:"original_link"`
-	UserID       int    `json:"user_id" form:"user_id"`
+	UserID       *int    `json:"user_id" form:"user_id"`
 }
+
 
 type InsertUrlResponse struct {
 	ID           int       `json:"id"`
@@ -65,7 +77,7 @@ type InsertUrlResponse struct {
 	ShortLink    string    `json:"short_link"`
 	OriginalLink string    `json:"original_link"`
 	HitCounter   int       `json:"hit_counter"`
-	CreatedBy    int       `json:"created_by"`
+	UserID       *int       `json:"user_id"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }
@@ -83,7 +95,7 @@ type UpdateUrlResponse struct {
 	ShortLink    string    `json:"short_link"`
 	OriginalLink string    `json:"original_link"`
 	HitCounter   int       `json:"hit_counter"`
-	CreatedBy    int       `json:"created_by"`
+	UserID       int       `json:"user_id"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }
