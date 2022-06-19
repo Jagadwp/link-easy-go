@@ -50,9 +50,12 @@ func (ctr *UrlController) InsertUrl(c echo.Context) error {
 
 	userID := currentUser.ID
 	req := dto.InsertUrlRequest{}
-
+	
 	if err := c.Bind(&req); err != nil {
 		return dto.ErrorResponse(c, http.StatusBadRequest, shared.MESSAGE_FIELD_REQUIRED)
+	}
+	if !ctr.urlService.IsUrlValid(req.OriginalLink) {
+		return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrOriginalUrlNotValid.Error())
 	}
 
 	response, err := ctr.urlService.InsertUrl(req.Title, req.ShortLink, req.OriginalLink, &userID)

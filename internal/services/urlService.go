@@ -1,6 +1,7 @@
 package services
 
 import (
+	"net/url"
 	"time"
 
 	"github.com/Jagadwp/link-easy-go/internal/models"
@@ -66,7 +67,6 @@ func (s *UrlService) InsertUrl(title, shortLink, originalLink string, id *int) (
 
 func (s *UrlService) GetAllUrlsByUserID(userID int) (*[]models.Url, error) {
 	urls, err := s.urlsRepo.GetAllUrlsByUserID(userID)
-
 	if err != nil {
 		return &[]models.Url{}, err
 	}
@@ -76,7 +76,6 @@ func (s *UrlService) GetAllUrlsByUserID(userID int) (*[]models.Url, error) {
 
 func (s *UrlService) GetUrlById(id int) (*models.Url, error) {
 	url, err := s.urlsRepo.GetUrlById(id)
-
 	if err != nil {
 		return &models.Url{}, err
 	}
@@ -86,7 +85,6 @@ func (s *UrlService) GetUrlById(id int) (*models.Url, error) {
 
 func (s *UrlService) UpdateUrl(id int, req *dto.UpdateUrlRequest) (*dto.UpdateUrlResponse, error) {
 	url, err := s.urlsRepo.GetUrlById(id)
-
 	if err != nil {
 		return &dto.UpdateUrlResponse{}, err
 	}
@@ -103,7 +101,6 @@ func (s *UrlService) UpdateUrl(id int, req *dto.UpdateUrlRequest) (*dto.UpdateUr
 	url.UpdatedAt = time.Now()
 
 	url, err = s.urlsRepo.UpdateUrl(url)
-
 	if err != nil {
 		return &dto.UpdateUrlResponse{}, err
 	}
@@ -118,18 +115,15 @@ func (s *UrlService) UpdateUrl(id int, req *dto.UpdateUrlRequest) (*dto.UpdateUr
 		CreatedAt:    url.CreatedAt,
 		UpdatedAt:    url.UpdatedAt,
 	}, nil
-
 }
 
 func (s *UrlService) DeleteUrl(id int) (*models.Url, error) {
 	url, err := s.urlsRepo.GetUrlById(id)
-
 	if err != nil {
 		return &models.Url{}, err
 	}
 
 	url, err = s.urlsRepo.DeleteUrl(url)
-
 	if err != nil {
 		return &models.Url{}, err
 	}
@@ -139,4 +133,18 @@ func (s *UrlService) DeleteUrl(id int) (*models.Url, error) {
 
 func (s *UrlService) IsUserAllowedToEdit(userID int, userIDInUrl int) (bool) {
 	return userID == userIDInUrl
+}
+
+func (s *UrlService) IsUrlValid(toTest string) (bool) {
+	_, err := url.ParseRequestURI(toTest)
+	if err != nil {
+		return false
+	}
+
+	u, err := url.Parse(toTest)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return false
+	}
+
+	return true
 }

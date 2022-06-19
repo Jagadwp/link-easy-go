@@ -20,6 +20,7 @@ var (
 
 	ErrUrlShortLinkAlreadyExist = fmt.Errorf("short link already exist")
 	ErrUrlNotFound = fmt.Errorf("url not found")
+	ErrOriginalUrlNotValid = fmt.Errorf("original url is not valid")
 )
 
 type ErrorGorm struct {
