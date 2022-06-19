@@ -107,20 +107,25 @@ func (ctr *UrlController) GetUrlUserById(c echo.Context) error {
 		return dto.ErrorResponse(c, http.StatusNotFound, shared.ErrUrlNotFound.Error())
 	}
 
-	if (ctr.urlService.IsUserAllowedToEdit(userID, response.ID)) {
+	if (ctr.urlService.IsUserAllowedToEdit(userID, *response.UserID)) {
 		return dto.SuccessResponse(c, http.StatusOK, "Url successfully fetched", response)
 	} else {
 		return dto.ErrorResponse(c, http.StatusForbidden, shared.ErrForbiddenToAccess.Error())
 	}
-
-
 }
 
 func (ctr *UrlController) UpdateUrl(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return dto.ErrorResponse(c, http.StatusBadRequest, "Parameter id is not valid")
+		return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrParamIDNotValid.Error())
 	}
+
+	currentUser, ok := ctr.userService.GetCurrentUser(c)
+	if !ok {
+		return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrJWTInvalid.Error())
+	}
+
+	userID := currentUser.ID
 
 	getUrlResponse, err := ctr.urlService.GetUrlById(id)
 	if err != nil {
@@ -130,24 +135,35 @@ func (ctr *UrlController) UpdateUrl(c echo.Context) error {
 		return dto.ErrorResponse(c, http.StatusNotFound, shared.ErrUrlNotFound.Error())
 	}
 
-	req := dto.UpdateUrlRequest{}
-	if err := c.Bind(&req); err != nil {
-		return dto.ErrorResponse(c, http.StatusBadRequest, shared.MESSAGE_FIELD_REQUIRED)
-	}
+	if (ctr.urlService.IsUserAllowedToEdit(userID, *getUrlResponse.UserID)) {
+		req := dto.UpdateUrlRequest{}
+		if err := c.Bind(&req); err != nil {
+			return dto.ErrorResponse(c, http.StatusBadRequest, shared.MESSAGE_FIELD_REQUIRED)
+		}
 
-	updateResponse, err := ctr.urlService.UpdateUrl(id, &req)
-	if err != nil {
-		return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
-	}
+		updateResponse, err := ctr.urlService.UpdateUrl(id, &req)
+		if err != nil {
+			return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
+		}
 
-	return dto.SuccessResponse(c, http.StatusOK, "Url successfully updated", updateResponse)
+		return dto.SuccessResponse(c, http.StatusOK, "Url successfully updated", updateResponse)	
+	} else {
+		return dto.ErrorResponse(c, http.StatusForbidden, shared.ErrForbiddenToAccess.Error())
+	}
 }
 
 func (ctr *UrlController) DeleteUrl(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return dto.ErrorResponse(c, http.StatusBadRequest, "Parameter id is not valid")
+		return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrParamIDNotValid.Error())
 	}
+
+	currentUser, ok := ctr.userService.GetCurrentUser(c)
+	if !ok {
+		return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrJWTInvalid.Error())
+	}
+
+	userID := currentUser.ID
 
 	getUrlResponse, err := ctr.urlService.GetUrlById(id)
 	if err != nil {
@@ -157,10 +173,16 @@ func (ctr *UrlController) DeleteUrl(c echo.Context) error {
 		return dto.ErrorResponse(c, http.StatusNotFound, shared.ErrUrlNotFound.Error())
 	}
 
-	deleteResponse, err := ctr.urlService.DeleteUrl(id)
-	if err != nil {
-		return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
+	if (ctr.urlService.IsUserAllowedToEdit(userID, *getUrlResponse.UserID)) {
+		deleteResponse, err := ctr.urlService.DeleteUrl(id)
+		if err != nil {
+			return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
+		}
+
+		return dto.SuccessResponse(c, http.StatusOK, "Url successfully deleted", deleteResponse)
+	} else {
+		return dto.ErrorResponse(c, http.StatusForbidden, shared.ErrForbiddenToAccess.Error())
 	}
 
-	return dto.SuccessResponse(c, http.StatusOK, "Url successfully deleted", deleteResponse)
+	
 }

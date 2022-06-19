@@ -89,7 +89,6 @@ type InsertUrlResponse struct {
 }
 
 type UpdateUrlRequest struct {
-	ID           int    `json:"id"`
 	Title        string `json:"title" form:"title"`
 	ShortLink    string `json:"short_link" form:"short_link"`
 	OriginalLink string `json:"original_link" form:"original_link"`
