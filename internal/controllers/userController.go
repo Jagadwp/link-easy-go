@@ -68,7 +68,7 @@ func (ctr *UserController) GetUserById(c echo.Context) error {
 		return dto.ErrorResponse(c, http.StatusBadRequest, "Parameter id is not valid")
 	}
 
-	response, err := ctr.services.GetUserById(id)
+	response, _ := ctr.services.GetUserById(id)
 
 	if (*response).ID == 0 {
 		return dto.ErrorResponse(c, http.StatusNotFound, "User not found")
@@ -84,7 +84,7 @@ func (ctr *UserController) UpdateUser(c echo.Context) error {
 		return dto.ErrorResponse(c, http.StatusBadRequest, "Parameter id is not valid")
 	}
 
-	getUserResponse, err := ctr.services.GetUserById(id)
+	getUserResponse, _ := ctr.services.GetUserById(id)
 
 	if (*getUserResponse).ID == 0 {
 		return dto.ErrorResponse(c, http.StatusNotFound, "User not found")
@@ -111,7 +111,7 @@ func (ctr *UserController) DeleteUser(c echo.Context) error {
 		return dto.ErrorResponse(c, http.StatusBadRequest, "Parameter id is not valid")
 	}
 
-	getUserResponse, err := ctr.services.GetUserById(id)
+	getUserResponse, _ := ctr.services.GetUserById(id)
 
 	if (*getUserResponse).ID == 0 {
 		return dto.ErrorResponse(c, http.StatusNotFound, "User not found")

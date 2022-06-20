@@ -44,7 +44,6 @@ func (s *UserService) Login(req *dto.LoginRequest) (*dto.LoginResponse, error) {
 			ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
 		},
 	}
-	fmt.Println(time.Now().Add(time.Hour * 72))
 	token := jwt.NewWithClaims(config.JWT_SIGNING_METHOD, claims)
 
 	fmt.Println(claims)
@@ -66,7 +65,7 @@ func (s *UserService) Login(req *dto.LoginRequest) (*dto.LoginResponse, error) {
 
 func (s *UserService) GetCurrentUser(c echo.Context) (userInfo *dto.JwtUserInfo, ok bool) {
 	user, ok := c.Get("user").(*goJwt.Token)
-
+	
 	if !ok {
 		return &dto.JwtUserInfo{}, ok
 	}

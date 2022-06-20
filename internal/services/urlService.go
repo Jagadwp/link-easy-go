@@ -20,7 +20,6 @@ func NewUrlService(urlsRepo *repository.UrlRepository) *UrlService {
 
 func (s *UrlService) CreateShortUrl(req *dto.GenerateUrlRequest) (*dto.InsertUrlResponse, error) {
 	shortLink, errNanoId := helper.GenerateLink()
-	// shortLink = "https://linkeasy.in/" + shortLink
 
 	if errNanoId != nil {
 		return &dto.InsertUrlResponse{}, errNanoId

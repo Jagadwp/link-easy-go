@@ -13,7 +13,7 @@ import (
 )
 
 type UrlController struct {
-	urlService *services.UrlService
+	urlService  *services.UrlService
 	userService *services.UserService
 }
 
@@ -21,18 +21,30 @@ func NewUrlController(
 	urlService *services.UrlService,
 	userService *services.UserService) *UrlController {
 	return &UrlController{
-		urlService: urlService,
+		urlService:  urlService,
 		userService: userService,
 	}
 }
 
 func (ctr *UrlController) CreateShortUrl(c echo.Context) error {
+	currentUser, ok := ctr.userService.GetCurrentUser(c)
+	if !ok {
+		return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrJWTInvalid.Error())
+	}
+
+	userID := currentUser.ID
 	req := dto.GenerateUrlRequest{}
 
 	if err := c.Bind(&req); err != nil {
 		return dto.ErrorResponse(c, http.StatusBadRequest, shared.MESSAGE_FIELD_REQUIRED)
 	}
 
+	req.UserID = &userID
+
+	if !ctr.urlService.IsUrlValid(req.OriginalLink) {
+		return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrOriginalUrlNotValid.Error())
+	}
+		
 	response, err := ctr.urlService.CreateShortUrl(&req)
 
 	if err != nil {
@@ -50,7 +62,7 @@ func (ctr *UrlController) InsertUrl(c echo.Context) error {
 
 	userID := currentUser.ID
 	req := dto.InsertUrlRequest{}
-	
+
 	if err := c.Bind(&req); err != nil {
 		return dto.ErrorResponse(c, http.StatusBadRequest, shared.MESSAGE_FIELD_REQUIRED)
 	}
@@ -110,7 +122,7 @@ func (ctr *UrlController) GetUrlUserById(c echo.Context) error {
 		return dto.ErrorResponse(c, http.StatusNotFound, shared.ErrUrlNotFound.Error())
 	}
 
-	if (ctr.urlService.IsUserAllowedToEdit(userID, *response.UserID)) {
+	if ctr.urlService.IsUserAllowedToEdit(userID, *response.UserID) {
 		return dto.SuccessResponse(c, http.StatusOK, "Url successfully fetched", response)
 	} else {
 		return dto.ErrorResponse(c, http.StatusForbidden, shared.ErrForbiddenToAccess.Error())
@@ -128,7 +140,21 @@ func (ctr *UrlController) GetUrlPublicByShortLink(c echo.Context) error {
 		return dto.ErrorResponse(c, http.StatusNotFound, shared.ErrUrlNotFound.Error())
 	}
 
-	return dto.SuccessResponse(c, http.StatusOK, "Url successfully fetched", response)	
+	return dto.SuccessResponse(c, http.StatusOK, "Url successfully fetched", response)
+}
+
+func (ctr *UrlController) RedirectShortLink(c echo.Context) error {
+	shortLink := c.Param("short_link")
+
+	response, err := ctr.urlService.GetUrlByShortLink(shortLink)
+	if err != nil {
+		return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
+	}
+	if (*response).ShortLink == "" {
+		return dto.ErrorResponse(c, http.StatusNotFound, shared.ErrUrlNotFound.Error())
+	}
+
+	return c.Redirect(http.StatusFound, response.OriginalLink)
 }
 
 func (ctr *UrlController) UpdateUrl(c echo.Context) error {
@@ -152,7 +178,7 @@ func (ctr *UrlController) UpdateUrl(c echo.Context) error {
 		return dto.ErrorResponse(c, http.StatusNotFound, shared.ErrUrlNotFound.Error())
 	}
 
-	if (ctr.urlService.IsUserAllowedToEdit(userID, *getUrlResponse.UserID)) {
+	if ctr.urlService.IsUserAllowedToEdit(userID, *getUrlResponse.UserID) {
 		req := dto.UpdateUrlRequest{}
 		if err := c.Bind(&req); err != nil {
 			return dto.ErrorResponse(c, http.StatusBadRequest, shared.MESSAGE_FIELD_REQUIRED)
@@ -163,7 +189,7 @@ func (ctr *UrlController) UpdateUrl(c echo.Context) error {
 			return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
 		}
 
-		return dto.SuccessResponse(c, http.StatusOK, "Url successfully updated", updateResponse)	
+		return dto.SuccessResponse(c, http.StatusOK, "Url successfully updated", updateResponse)
 	} else {
 		return dto.ErrorResponse(c, http.StatusForbidden, shared.ErrForbiddenToAccess.Error())
 	}
@@ -190,7 +216,7 @@ func (ctr *UrlController) DeleteUrl(c echo.Context) error {
 		return dto.ErrorResponse(c, http.StatusNotFound, shared.ErrUrlNotFound.Error())
 	}
 
-	if (ctr.urlService.IsUserAllowedToEdit(userID, *getUrlResponse.UserID)) {
+	if ctr.urlService.IsUserAllowedToEdit(userID, *getUrlResponse.UserID) {
 		deleteResponse, err := ctr.urlService.DeleteUrl(id)
 		if err != nil {
 			return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
@@ -201,5 +227,4 @@ func (ctr *UrlController) DeleteUrl(c echo.Context) error {
 		return dto.ErrorResponse(c, http.StatusForbidden, shared.ErrForbiddenToAccess.Error())
 	}
 
-	
 }

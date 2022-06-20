@@ -98,7 +98,19 @@ func (u *UrlRepository) GetUrlByShortLink(shortLink string) (*models.Url, error)
 		return &models.Url{}, err
 	}
 
+	u.IncrementHitCounter(&url)
+
 	return &url, nil
+}
+
+func (u *UrlRepository) IncrementHitCounter(url *models.Url) (*models.Url, error) {
+	query := u.db.Model(url).Update("hit_counter", url.HitCounter+1)
+
+	if err := query.Error; err != nil {
+		return &models.Url{}, err
+	}
+
+	return url, nil
 }
 
 func (u *UrlRepository) UpdateUrl(url *models.Url) (*models.Url, error) {

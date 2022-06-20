@@ -40,12 +40,11 @@ func UrlUserPath(e *echo.Echo, urlController *controllers.UrlController) {
 	if urlController == nil {
 		panic("Controller parameter cannot be nil")
 	}
-	
-	e.POST("urls/generate", urlController.CreateShortUrl)
-	
+
 	url := e.Group("urls")
 	url.Use(middleware.IsAuthenticated)
-
+	
+	url.POST("/generate", urlController.CreateShortUrl)
 	url.GET("", urlController.GetAllUrlsByUserID)
 	url.POST("", urlController.InsertUrl)
 	url.GET("/:id", urlController.GetUrlUserById)
@@ -60,4 +59,5 @@ func PublicPath(e *echo.Echo, urlController *controllers.UrlController) {
 
 	public := e.Group("public")
 	public.GET("/:short_link", urlController.GetUrlPublicByShortLink)
+	public.GET("/redirect/:short_link", urlController.RedirectShortLink)
 }
