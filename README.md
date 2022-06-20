@@ -1,3 +1,16 @@
+# Link Easy
+## About
+This is an url shortener API created by Echo (Go Framework) and PostgreSQL.
+## Features
+- Authentication
+- Middleware
+- Use clean architecture
+![https://raw.githubusercontent.com/bxcodec/go-clean-arch/master/clean-arch.png]()
+- CRUD user
+- CRUD url
+- Caching with Redis
+## How to Run
+
 Before you start the program, don't forget to do this on your terminal
 
 ```
@@ -26,3 +39,5 @@ Run app
 ```
 go run app/main.go
 ```
+
+## API Documentation
