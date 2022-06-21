@@ -4,11 +4,10 @@ This is an url shortener API created by Echo (Go Framework) and PostgreSQL.
 ## Features
 - Authentication
 - Middleware
-- Use clean architecture
-![https://raw.githubusercontent.com/bxcodec/go-clean-arch/master/clean-arch.png]()
 - CRUD user
 - CRUD url
-- Caching with Redis
+- Use clean architecture
+![](docs/clean-arch.png)
 ## How to Run
 
 Before you start the program, don't forget to do this on your terminal
@@ -41,3 +40,4 @@ go run app/main.go
 ```
 
 ## API Documentation
+https://documenter.getpostman.com/view/14606692/UzBnpmJ6
