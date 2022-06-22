@@ -1,1 +1,1 @@
-web: ./link-easy.exe
+web: bash link-easy.exe
