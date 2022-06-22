@@ -1,1 +1,1 @@
-web: bin/link-easy
+web: bin\link-easy.exe
