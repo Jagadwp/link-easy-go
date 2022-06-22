@@ -1,1 +1,1 @@
-web: bash link-easy.exe
+web: bin/link-easy-go
