@@ -41,7 +41,7 @@ func main() {
 
 	// run server
 	go func() {
-		APP_PORT := os.Getenv("APP_PORT")
+		APP_PORT := os.Getenv("PORT")
 		if APP_PORT == "" {
 			APP_PORT = config.APP_PORT
 		}
