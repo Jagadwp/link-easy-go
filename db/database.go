@@ -2,9 +2,12 @@ package db
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	model "github.com/Jagadwp/link-easy-go/internal/models"
+	"github.com/Jagadwp/link-easy-go/internal/shared/config"
+	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -13,12 +16,12 @@ var database *gorm.DB
 var e error
 
 func DatabaseInit() {
-
-	//Uncomment below code for local development
-	// err := godotenv.Load(config.ENV_PATH)
-	// if err != nil {
-	// 	log.Fatal("Error loading .env file")
-	// }
+	if os.Getenv("APP_ENV") != "production" {
+		err := godotenv.Load(config.ENV_PATH)
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
+	}
 
 	host := os.Getenv("DB_HOST")
 	user := os.Getenv("DB_USER")

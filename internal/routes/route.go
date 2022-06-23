@@ -57,7 +57,7 @@ func PublicPath(e *echo.Echo, urlController *controllers.UrlController) {
 		panic("Controller parameter cannot be nil")
 	}
 
-	public := e.Group("public")
-	public.GET("/:short_link", urlController.GetUrlPublicByShortLink)
-	public.GET("/redirect/:short_link", urlController.RedirectShortLink)
+	public := e.Group("")
+	public.GET("/api/v1/:short_link", urlController.GetUrlPublicByShortLink)
+	public.GET("/:short_link", urlController.RedirectShortLink)
 }
