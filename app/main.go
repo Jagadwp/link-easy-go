@@ -46,7 +46,7 @@ func main() {
 			APP_PORT = config.APP_PORT
 		}
 
-		address := fmt.Sprintf(":%s", APP_PORT)
+		address := fmt.Sprintf("localhost:%s", APP_PORT)
 
 		if err := e.Start(address); err != nil {
 			log.Info("shutting down the server")
