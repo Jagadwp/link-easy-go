@@ -65,14 +65,14 @@ func (s *UserService) Login(req *dto.LoginRequest) (*dto.LoginResponse, error) {
 
 func (s *UserService) GetCurrentUser(c echo.Context) (userInfo *dto.JwtUserInfo, ok bool) {
 	user, ok := c.Get("user").(*goJwt.Token)
-	
+
 	if !ok {
 		return &dto.JwtUserInfo{}, ok
 	}
 
-    claims := user.Claims.(goJwt.MapClaims)
+	claims := user.Claims.(goJwt.MapClaims)
 	username := claims["username"].(string)
-    userID := claims["id"].(float64)
+	userID := claims["id"].(float64)
 	isAdmin := claims["admin"].(bool)
 
 	newUser := &dto.JwtUserInfo{
@@ -80,7 +80,7 @@ func (s *UserService) GetCurrentUser(c echo.Context) (userInfo *dto.JwtUserInfo,
 		Username: username,
 		Admin:    isAdmin,
 	}
-	
+
 	return newUser, true
 }
 
@@ -161,6 +161,10 @@ func (s *UserService) UpdateUser(id int, req *dto.UpdateUserRequest) (*dto.Commo
 
 	if req.Fullname != "" {
 		user.Fullname = req.Fullname
+	}
+
+	if req.Email != "" {
+		user.Email = req.Email
 	}
 
 	if req.Password != "" {

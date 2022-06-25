@@ -44,9 +44,9 @@ CMD ["/build/bin/link-easy-go"]
 # -t for tagging, default is 'latest'
 
 # Run docker container
-# docker run -p 8080:8080 -it link-easy-go:1.0
+# docker run -p 8080:8080 -it --rm link-easy-go:1.0
 
 # -p - for <OUR_HOST_PORT>:<CONTAINER:PORT> 
 # -it - This flag specifies that we want to run this image in
 #       interactive mode with a tty for this container process.
-# --rm - Automatically remove the containerwhen it exits
+# --rm - Automatically remove the container when it exits
