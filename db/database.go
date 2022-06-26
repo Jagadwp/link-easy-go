@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 
 	model "github.com/Jagadwp/link-easy-go/internal/models"
 	"github.com/Jagadwp/link-easy-go/internal/shared/config"
@@ -15,12 +16,24 @@ import (
 var database *gorm.DB
 var e error
 
+const projectDirName = "link-easy-go" // change to relevant project name
+
+// Get dyanmic env location for testing
+func loadEnv() {
+	projectName := regexp.MustCompile(`^(.*` + projectDirName + `)`)
+	currentWorkDirectory, _ := os.Getwd()
+	rootPath := projectName.Find([]byte(currentWorkDirectory))
+
+	err := godotenv.Load(string(rootPath) + `/` + config.ENV_PATH)
+
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+}
+
 func DatabaseInit() {
 	if os.Getenv("APP_ENV") != "production" {
-		err := godotenv.Load(config.ENV_PATH)
-		if err != nil {
-			log.Fatal("Error loading .env file")
-		}
+		loadEnv()
 	}
 
 	host := os.Getenv("DB_HOST")

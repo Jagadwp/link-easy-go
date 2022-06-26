@@ -34,4 +34,9 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Test
-        run: go test -v -cover ./...
+        run: |
+        go test -v -cover internal/tests/initHandler.go \ 
+          internal/tests/userController_test.go \ 
+          internal/tests/urlController_test.go
+
+# run: go test -v -cover ./...
