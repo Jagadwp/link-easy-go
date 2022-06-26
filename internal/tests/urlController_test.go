@@ -1,44 +1,20 @@
 package tests
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
-	"github.com/Jagadwp/link-easy-go/internal/services/helper"
 	"github.com/Jagadwp/link-easy-go/internal/shared/dto"
 	"github.com/gavv/httpexpect"
 )
 
-func TestRegister(t *testing.T) {
+func TestCreateShortUrl(t *testing.T) {
 	handler := InitHandler()
 
-	server := httptest.NewServer(handler)
-
-	defer server.Close()
-
-	// create httpexpect for Mock instance
-	e := httpexpect.New(t, server.URL)
-
-	//==================GET JWT TOKEN FOR ADD IN HEADER REQUEST===================
-	data := dto.InsertUserRequest{
-		Username: "fulana",
-		Fullname: "fulana binti fulan",
-		Email:    "fulana@mail.com",
-		Password: "admin",
-	}
-
-	t.Run("Expected insert user", func(t *testing.T) {
-		e.POST("/register").
-			WithJSON(data).
-			Expect().
-			Status(http.StatusOK).JSON().Object()
-	})
-}
-
-func TestGetAllUsers(t *testing.T) {
-	handler := InitHandler()
-
+	// run server using httptest
 	server := httptest.NewServer(handler)
 
 	defer server.Close()
@@ -51,8 +27,55 @@ func TestGetAllUsers(t *testing.T) {
 		"username": "jagadwp",
 		"password": "admin",
 	}
-	// get token
 
+	// get token
+	obj := e.POST("/login").
+		WithJSON(data).
+		Expect().
+		Status(http.StatusOK).JSON().Object()
+
+	token := obj.Value("data").Object().Value("token").String().Raw()
+	idFloat := obj.Value("data").Object().Value("id").Number().Raw()
+	userID := int(idFloat)
+
+	// fmt.Println("Data adalah:\n", userID)
+	fmt.Println("tipenya:\n", reflect.TypeOf(userID))
+
+	auth := e.Builder(func(req *httpexpect.Request) {
+		req.WithHeader("Authorization", "Bearer "+token)
+	})
+
+	t.Run("Expected Insert url, then call get one By ID and found that url", func(t *testing.T) {
+		dataForInsert := dto.GenerateUrlRequest{
+			Title:        "Tutorial docker golang postgres",
+			OriginalLink: "https://www.youtube.com/watch?v=p1dwLKAxUxA&list=PLy_6D98if3ULEtXtNSY_2qN21VCKgoQAE&index=23&t=106s",
+			UserID:       &userID,
+		}
+
+		auth.POST("/urls/generate").WithJSON(dataForInsert).
+			Expect().
+			Status(http.StatusOK)
+	})
+}
+
+func TestGetUrlByUserId(t *testing.T) {
+	handler := InitHandler()
+
+	// run server using httptest
+	server := httptest.NewServer(handler)
+
+	defer server.Close()
+
+	// create httpexpect for Mock instance
+	e := httpexpect.New(t, server.URL)
+
+	//==================GET JWT TOKEN FOR ADD IN HEADER REQUEST===================
+	data := map[string]interface{}{
+		"username": "caesaryo_slf",
+		"password": "admin",
+	}
+
+	// get token
 	obj := e.POST("/login").
 		WithJSON(data).
 		Expect().
@@ -60,23 +83,23 @@ func TestGetAllUsers(t *testing.T) {
 
 	token := obj.Value("data").Object().Value("token").String().Raw()
 
-	// fmt.Println("Data adalah:\n", token)
-	// fmt.Println("tipenya:\n", reflect.TypeOf(token))
-
 	auth := e.Builder(func(req *httpexpect.Request) {
 		req.WithHeader("Authorization", "Bearer "+token)
 	})
 
-	t.Run("Expected find all users data", func(t *testing.T) {
-		auth.GET("/users").
+	t.Run("Expected Find ALL short url list", func(t *testing.T) {
+		auth.GET("/urls").
 			Expect().
 			Status(http.StatusOK).JSON().Object()
+
 	})
+
 }
 
-func TestGetUserById(t *testing.T) {
+func TestUpdateUrl(t *testing.T) {
 	handler := InitHandler()
 
+	// run server using httptest
 	server := httptest.NewServer(handler)
 
 	defer server.Close()
@@ -89,8 +112,8 @@ func TestGetUserById(t *testing.T) {
 		"username": "jagadwp",
 		"password": "admin",
 	}
-	// get token
 
+	// get token
 	obj := e.POST("/login").
 		WithJSON(data).
 		Expect().
@@ -98,30 +121,41 @@ func TestGetUserById(t *testing.T) {
 
 	token := obj.Value("data").Object().Value("token").String().Raw()
 
-	// fmt.Println("Data adalah:\n", token)
-	// fmt.Println("tipenya:\n", reflect.TypeOf(token))
-
 	auth := e.Builder(func(req *httpexpect.Request) {
 		req.WithHeader("Authorization", "Bearer "+token)
 	})
 
-	t.Run("Expected find user data", func(t *testing.T) {
-		auth.GET("/users/{id}").WithPath("id", 1).
+	t.Run("Expected Update url, then call get one By ID and found that url", func(t *testing.T) {
+		dataForInsert := dto.UpdateUrlRequest{
+			Title:        "Tutorial docker golang postgres",
+			ShortLink:    "tutordocker",
+			OriginalLink: "https://www.youtube.com/watch?v=p1dwLKAxUxA&list=PLy_6D98if3ULEtXtNSY_2qN21VCKgoQAE&index=23&t=106s",
+		}
+
+		auth.PUT("/urls/{id}").WithPath("id", 12).
+			WithJSON(dataForInsert).
 			Expect().
-			Status(http.StatusOK).JSON().Object()
+			Status(http.StatusOK)
 	})
 
-	t.Run("Expected find user data, But NOT found that user", func(t *testing.T) {
-		auth.GET("/users/{id}").WithPath("id", 999).
-			Expect().
-			Status(http.StatusNotFound).JSON().Object()
-	})
+	t.Run("Expected Update url, then call get one By ID and not found that url", func(t *testing.T) {
+		dataForInsert := dto.UpdateUrlRequest{
+			Title:        "Tutorial docker golang postgres",
+			ShortLink:    "tutor_docker",
+			OriginalLink: "https://www.youtube.com/watch?v=p1dwLKAxUxA&list=PLy_6D98if3ULEtXtNSY_2qN21VCKgoQAE&index=23&t=106s",
+		}
 
+		auth.PUT("/urls/{id}").WithPath("id", 999).
+			WithJSON(dataForInsert).
+			Expect().
+			Status(http.StatusNotFound)
+	})
 }
 
-func TestUpdateUser(t *testing.T) {
+func TestDeleteUrl(t *testing.T) {
 	handler := InitHandler()
 
+	// run server using httptest
 	server := httptest.NewServer(handler)
 
 	defer server.Close()
@@ -131,11 +165,11 @@ func TestUpdateUser(t *testing.T) {
 
 	//==================GET JWT TOKEN FOR ADD IN HEADER REQUEST===================
 	data := map[string]interface{}{
-		"username": "faizul",
+		"username": "jagadwp",
 		"password": "admin",
 	}
-	// get token
 
+	// get token
 	obj := e.POST("/login").
 		WithJSON(data).
 		Expect().
@@ -147,43 +181,23 @@ func TestUpdateUser(t *testing.T) {
 		req.WithHeader("Authorization", "Bearer "+token)
 	})
 
-	t.Run("Expected update user, then call get one By ID and found that user", func(t *testing.T) {
-		newPassword, _ := helper.Hash("passbaru")
-
-		dataForUpdate := dto.UpdateUserRequest{
-			Username: "User Z",
-			Fullname: "User Z Updated",
-			Email:    "newz@mail.com",
-			Password: newPassword,
-			Admin:    true,
-		}
-
-		auth.PUT("/users/{id}").WithPath("id", 10).
-			WithJSON(dataForUpdate).
+	t.Run("Expected delete url", func(t *testing.T) {
+		auth.DELETE("/urls/{id}").WithPath("id", 14).
 			Expect().
 			Status(http.StatusOK)
 	})
 
-	t.Run("Expected update user, then call get one By ID But NOT found that user", func(t *testing.T) {
-		newPassword, _ := helper.Hash("passbaru")
-
-		dataForUpdate := dto.UpdateUserRequest{
-			Username: "User X",
-			Fullname: "User X Updated",
-			Email:    "updated@mail.com",
-			Password: newPassword,
-			Admin:    true,
-		}
-
-		auth.PUT("/users/{id}").WithPath("id", 999).
-			WithJSON(dataForUpdate).Expect().
+	t.Run("Expected delete url, then call get one By ID But NOT found that url", func(t *testing.T) {
+		auth.DELETE("/urls/{id}").WithPath("id", 999).
+			Expect().
 			Status(http.StatusNotFound)
 	})
 }
 
-func TestDeleteUser(t *testing.T) {
+func TestRedirectUrl(t *testing.T) {
 	handler := InitHandler()
 
+	// run server using httptest
 	server := httptest.NewServer(handler)
 
 	defer server.Close()
@@ -191,33 +205,9 @@ func TestDeleteUser(t *testing.T) {
 	// create httpexpect for Mock instance
 	e := httpexpect.New(t, server.URL)
 
-	//==================GET JWT TOKEN FOR ADD IN HEADER REQUEST===================
-	data := map[string]interface{}{
-		"username": "faizul",
-		"password": "admin",
-	}
-	// get token
-
-	obj := e.POST("/login").
-		WithJSON(data).
-		Expect().
-		Status(http.StatusOK).JSON().Object()
-
-	token := obj.Value("data").Object().Value("token").String().Raw()
-
-	auth := e.Builder(func(req *httpexpect.Request) {
-		req.WithHeader("Authorization", "Bearer "+token)
-	})
-
-	t.Run("Expected delete user, then call get one By ID and found that user", func(t *testing.T) {
-		auth.DELETE("/users/{id}").WithPath("id", 12).
+	t.Run("Expected redirect url", func(t *testing.T) {
+		e.GET("/{id}").WithPath("id", "myits").
 			Expect().
 			Status(http.StatusOK)
-	})
-
-	t.Run("Expected delete user, then call get one By ID But NOT found that user", func(t *testing.T) {
-		auth.DELETE("/users/{id}").WithPath("id", 999).
-			Expect().
-			Status(http.StatusNotFound)
 	})
 }
