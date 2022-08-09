@@ -19,34 +19,41 @@ func NewUrlService(urlsRepo *repository.UrlRepository) *UrlService {
 	return &UrlService{urlsRepo: urlsRepo}
 }
 
-func (s *UrlService) GetAllUrlsByUserID(userID int) (*[]models.Url, error) {
-	urls, err := s.urlsRepo.GetUrlsByUserID(userID)
-	if err != nil {
-		return &[]models.Url{}, err
+// public
+func (s *UrlService) GetUrlPublicByShortLink(shortLink string) (*dto.PublicUrlResponse, error) {
+	url, _ := s.urlsRepo.GetUrlByShortLink(shortLink)
+	if (*url).ID == 0 {
+		return &dto.PublicUrlResponse{}, shared.ErrUrlNotFound
 	}
 
-	return urls, nil
-}
-
-func (s *UrlService) GetUrlById(id int) (*models.Url, error) {
-	url, err := s.urlsRepo.GetUrlById(id)
-	if err != nil {
-		return &models.Url{}, err
-	}
-
-	return url, nil
-}
-
-func (s *UrlService) GetUrlByShortLink(shortLink string) (*dto.PublicUrlResponse, error) {
-	url, err := s.urlsRepo.GetUrlByShortLink(shortLink)
-	if err != nil {
-		return &dto.PublicUrlResponse{}, err
-	}
+	s.urlsRepo.IncrementHitCounter(url)
 
 	return &dto.PublicUrlResponse{
 		ShortLink: url.ShortLink,
 		OriginalLink: url.OriginalLink,
 	}, nil
+}
+
+func (s *UrlService) GetUrlsByUserID(userID int) (*[]models.Url, error) {
+	urls, _ := s.urlsRepo.GetUrlsByUserID(userID)
+	if len(*urls) == 0 {
+		return &[]models.Url{}, shared.ErrUrlNotFound
+	}
+
+	return urls, nil
+}
+
+func (s *UrlService) GetUrlUserById(id int, userID int) (*models.Url, error) {
+	url, _ := s.urlsRepo.GetUrlById(id)
+	if (*url).ID == 0 {
+		return &models.Url{}, shared.ErrUrlNotFound
+	}
+
+	if !s.IsUserAllowedToEdit(userID, url.UserID) {
+		return &models.Url{}, shared.ErrForbiddenToAccess
+	}
+
+	return url, nil
 }
 
 func (s *UrlService) CreateUrl(req *dto.CreateUrlRequest) (*dto.CreateUrlResponse, error) {

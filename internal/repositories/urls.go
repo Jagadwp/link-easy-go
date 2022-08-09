@@ -46,9 +46,6 @@ func (u *UrlRepository) GetUrlByShortLink(shortLink string) (*models.Url, error)
 		return &models.Url{}, err
 	}
 
-	//TODO harusnya ini gaboleh disini
-	// u.IncrementHitCounter(&url)
-
 	return &url, nil
 }
 
