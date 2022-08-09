@@ -44,9 +44,8 @@ func UrlUserPath(e *echo.Echo, urlController *controllers.UrlController) {
 	url := e.Group("urls")
 	url.Use(middleware.IsAuthenticated)
 	
-	url.POST("/generate", urlController.CreateShortUrl)
 	url.GET("", urlController.GetAllUrlsByUserID)
-	url.POST("", urlController.InsertUrl)
+	url.POST("", urlController.CreateUrl)
 	url.GET("/:id", urlController.GetUrlUserById)
 	url.PUT("/:id", urlController.UpdateUrl)
 	url.DELETE("/:id", urlController.DeleteUrl)

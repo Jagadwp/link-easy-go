@@ -63,27 +63,19 @@ type CommonUserResponse struct {
 
 // URL Data Transfer Object
 
-type GenerateUrlRequest struct {
+type CreateUrlRequest struct {
 	Title        string `json:"title" form:"title"`
 	OriginalLink string `json:"original_link" form:"original_link"`
-	UserID       *int    `json:"user_id" form:"user_id"`
+	UserID       int    `json:"user_id" form:"user_id"`
 }
 
-type InsertUrlRequest struct {
-	Title        string `json:"title" form:"title"`
-	ShortLink    string `json:"short_link" form:"short_link"`
-	OriginalLink string `json:"original_link" form:"original_link"`
-	UserID       *int    `json:"user_id" form:"user_id"`
-}
-
-
-type InsertUrlResponse struct {
+type CreateUrlResponse struct {
 	ID           int       `json:"id"`
 	Title        string    `json:"title"`
 	ShortLink    string    `json:"short_link"`
 	OriginalLink string    `json:"original_link"`
 	HitCounter   int       `json:"hit_counter"`
-	UserID       *int       `json:"user_id"`
+	UserID       int       `json:"user_id"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }
@@ -92,6 +84,7 @@ type UpdateUrlRequest struct {
 	Title        string `json:"title" form:"title"`
 	ShortLink    string `json:"short_link" form:"short_link"`
 	OriginalLink string `json:"original_link" form:"original_link"`
+	UserID       int    `json:"user_id" form:"user_id"`
 }
 
 type UpdateUrlResponse struct {

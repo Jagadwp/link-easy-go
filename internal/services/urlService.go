@@ -7,6 +7,7 @@ import (
 	"github.com/Jagadwp/link-easy-go/internal/models"
 	repository "github.com/Jagadwp/link-easy-go/internal/repositories"
 	"github.com/Jagadwp/link-easy-go/internal/services/helper"
+	"github.com/Jagadwp/link-easy-go/internal/shared"
 	"github.com/Jagadwp/link-easy-go/internal/shared/dto"
 )
 
@@ -18,52 +19,8 @@ func NewUrlService(urlsRepo *repository.UrlRepository) *UrlService {
 	return &UrlService{urlsRepo: urlsRepo}
 }
 
-func (s *UrlService) CreateShortUrl(req *dto.GenerateUrlRequest) (*dto.InsertUrlResponse, error) {
-	shortLink, errNanoId := helper.GenerateLink()
-
-	if errNanoId != nil {
-		return &dto.InsertUrlResponse{}, errNanoId
-	}
-
-	url, err := s.urlsRepo.CreateShortUrl(req.Title, req.OriginalLink, shortLink, req.UserID)
-
-	if err != nil {
-		return &dto.InsertUrlResponse{}, err
-	}
-
-	return &dto.InsertUrlResponse{
-		ID:           url.ID,
-		Title:        url.Title,
-		ShortLink:    url.ShortLink,
-		OriginalLink: url.OriginalLink,
-		HitCounter:   url.HitCounter,
-		UserID:       url.UserID,
-		CreatedAt:    url.CreatedAt,
-		UpdatedAt:    url.UpdatedAt,
-	}, nil
-}
-
-func (s *UrlService) InsertUrl(title, shortLink, originalLink string, id *int) (*dto.InsertUrlResponse, error) {
-	url, err := s.urlsRepo.InsertUrl(title, shortLink, originalLink, id)
-
-	if err != nil {
-		return &dto.InsertUrlResponse{}, err
-	}
-
-	return &dto.InsertUrlResponse{
-		ID:           url.ID,
-		Title:        url.Title,
-		ShortLink:    url.ShortLink,
-		OriginalLink: url.OriginalLink,
-		HitCounter:   url.HitCounter,
-		UserID:       url.UserID,
-		CreatedAt:    url.CreatedAt,
-		UpdatedAt:    url.UpdatedAt,
-	}, nil
-}
-
 func (s *UrlService) GetAllUrlsByUserID(userID int) (*[]models.Url, error) {
-	urls, err := s.urlsRepo.GetAllUrlsByUserID(userID)
+	urls, err := s.urlsRepo.GetUrlsByUserID(userID)
 	if err != nil {
 		return &[]models.Url{}, err
 	}
@@ -92,24 +49,64 @@ func (s *UrlService) GetUrlByShortLink(shortLink string) (*dto.PublicUrlResponse
 	}, nil
 }
 
-func (s *UrlService) UpdateUrl(id int, req *dto.UpdateUrlRequest) (*dto.UpdateUrlResponse, error) {
-	url, err := s.urlsRepo.GetUrlById(id)
-	if err != nil {
-		return &dto.UpdateUrlResponse{}, err
+func (s *UrlService) CreateUrl(req *dto.CreateUrlRequest) (*dto.CreateUrlResponse, error) {
+	shortLink, errNanoId := helper.GenerateLink(); if errNanoId != nil {
+		return &dto.CreateUrlResponse{}, errNanoId
 	}
 
-	if req.Title != "" {
-		url.Title = req.Title
+	if !s.IsUrlValid(req.OriginalLink) {
+		return &dto.CreateUrlResponse{}, shared.ErrOriginalUrlNotValid
 	}
-	if req.ShortLink != "" {
-		url.ShortLink = req.ShortLink
+
+	url, err := s.urlsRepo.CreateUrl(&models.Url{
+		Title: req.Title,
+		ShortLink: shortLink,
+		OriginalLink: req.OriginalLink,
+		HitCounter:   0,
+		UserID:       req.UserID,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+	}); if(err != nil) {
+		return &dto.CreateUrlResponse{}, err
 	}
-	if req.OriginalLink != "" {
-		url.OriginalLink = req.OriginalLink
+
+	return &dto.CreateUrlResponse{
+		ID:           url.ID,
+		Title:        url.Title,
+		ShortLink:    url.ShortLink,
+		OriginalLink: url.OriginalLink,
+		HitCounter:   url.HitCounter,
+		UserID:       url.UserID,
+		CreatedAt:    url.CreatedAt,
+		UpdatedAt:    url.UpdatedAt,
+	}, nil
+}
+
+func (s *UrlService) UpdateUrl(id int, req *dto.UpdateUrlRequest) (*dto.UpdateUrlResponse, error) {
+	url, _ := s.urlsRepo.GetUrlById(id)
+	if (*url).ID == 0 {
+		return &dto.UpdateUrlResponse{}, shared.ErrUrlNotFound
 	}
+
+	url.Title = req.Title
+	url.ShortLink = req.ShortLink
+	url.OriginalLink = req.OriginalLink
 	url.UpdatedAt = time.Now()
 
-	url, err = s.urlsRepo.UpdateUrl(url)
+	urlByShortLink, _ := s.urlsRepo.GetUrlByShortLink(req.ShortLink)
+	if ((*urlByShortLink).ID != 0 && (*urlByShortLink).ID != id) {
+		return &dto.UpdateUrlResponse{}, shared.ErrUrlShortLinkAlreadyExist
+	}
+
+	if !s.IsUrlValid(req.OriginalLink) {
+		return &dto.UpdateUrlResponse{}, shared.ErrOriginalUrlNotValid
+	}
+
+	if !s.IsUserAllowedToEdit(req.UserID, url.UserID) {
+		return &dto.UpdateUrlResponse{}, shared.ErrForbiddenToAccess
+	}
+
+	url, err := s.urlsRepo.UpdateUrl(url)
 	if err != nil {
 		return &dto.UpdateUrlResponse{}, err
 	}
@@ -120,24 +117,37 @@ func (s *UrlService) UpdateUrl(id int, req *dto.UpdateUrlRequest) (*dto.UpdateUr
 		ShortLink:    url.ShortLink,
 		OriginalLink: url.OriginalLink,
 		HitCounter:   url.HitCounter,
-		UserID:       *url.UserID,
+		UserID:       url.UserID,
 		CreatedAt:    url.CreatedAt,
 		UpdatedAt:    url.UpdatedAt,
 	}, nil
 }
 
-func (s *UrlService) DeleteUrl(id int) (*models.Url, error) {
-	url, err := s.urlsRepo.GetUrlById(id)
-	if err != nil {
-		return &models.Url{}, err
+func (s *UrlService) DeleteUrl(id int, userID int) (*dto.UpdateUrlResponse, error) {
+	url, _ := s.urlsRepo.GetUrlById(id)
+	if (*url).ID == 0 {
+		return &dto.UpdateUrlResponse{}, shared.ErrUrlNotFound
 	}
 
-	url, err = s.urlsRepo.DeleteUrl(url)
-	if err != nil {
-		return &models.Url{}, err
+	if !s.IsUserAllowedToEdit(userID, url.UserID) {
+		return &dto.UpdateUrlResponse{}, shared.ErrForbiddenToAccess
 	}
 
-	return url, nil
+	url, err := s.urlsRepo.DeleteUrl(url)
+	if err != nil {
+		return &dto.UpdateUrlResponse{}, err
+	}
+
+	return &dto.UpdateUrlResponse{
+		ID:           url.ID,
+		Title:        url.Title,
+		ShortLink:    url.ShortLink,
+		OriginalLink: url.OriginalLink,
+		HitCounter:   url.HitCounter,
+		UserID:       url.UserID,
+		CreatedAt:    url.CreatedAt,
+		UpdatedAt:    url.UpdatedAt,
+	}, nil
 }
 
 func (s *UrlService) IsUserAllowedToEdit(userID int, userIDInUrl int) (bool) {

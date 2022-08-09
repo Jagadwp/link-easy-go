@@ -13,6 +13,8 @@ var (
 	ErrForbiddenToAccess = fmt.Errorf("you are forbidden to access this resource")
 	ErrParamIDNotValid = fmt.Errorf("parameter id is not valid")
 
+	ErrRequiredFieldsNotValid = fmt.Errorf("required fields are empty or not valid")
+
 	ErrJWTInvalid = fmt.Errorf("invalid token")
 	ErrJWTExpired = fmt.Errorf("token already expired")
 
