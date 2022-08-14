@@ -5,6 +5,17 @@ import (
 	"gorm.io/gorm"
 )
 
+type IUrlRepository interface {
+	GetUrlsByUsername(username string) (*[]models.Url, error)
+	GetUrlsByUserID(userID int) (*[]models.Url, error)
+	GetUrlById(id int) (*models.Url, error)
+	GetUrlByShortLink(shortLink string) (*models.Url, error)
+	IncrementHitCounter(url *models.Url) (*models.Url, error)
+	CreateUrl(url *models.Url) (*models.Url, error)
+	UpdateUrl(url *models.Url) (*models.Url, error)
+	DeleteUrl(url *models.Url) (*models.Url, error)
+}
+
 type UrlRepository struct {
 	db *gorm.DB
 }
