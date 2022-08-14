@@ -70,6 +70,7 @@ func (ctr *UserController) GetUserById(c echo.Context) error {
 
 	response, _ := ctr.services.GetUserById(id)
 
+	// TODO : error handling lihat di not found di url service dan controller, ini kayaknya harusnya ada di service
 	if (*response).ID == 0 {
 		return dto.ErrorResponse(c, http.StatusNotFound, "User not found")
 	}
@@ -86,6 +87,7 @@ func (ctr *UserController) UpdateUser(c echo.Context) error {
 
 	getUserResponse, _ := ctr.services.GetUserById(id)
 
+	// TODO, kayaknya seharusnya get user itu ada di service aja
 	if (*getUserResponse).ID == 0 {
 		return dto.ErrorResponse(c, http.StatusNotFound, "User not found")
 	}
@@ -111,6 +113,7 @@ func (ctr *UserController) DeleteUser(c echo.Context) error {
 		return dto.ErrorResponse(c, http.StatusBadRequest, "Parameter id is not valid")
 	}
 
+	// TODO
 	getUserResponse, _ := ctr.services.GetUserById(id)
 
 	if (*getUserResponse).ID == 0 {
