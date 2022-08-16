@@ -46,10 +46,10 @@ func TestCreateShortUrl(t *testing.T) {
 	})
 
 	t.Run("Expected Insert url, then call get one By ID and found that url", func(t *testing.T) {
-		dataForInsert := dto.GenerateUrlRequest{
+		dataForInsert := dto.CreateUrlRequest{
 			Title:        "Tutorial docker golang postgres",
 			OriginalLink: "https://www.youtube.com/watch?v=p1dwLKAxUxA&list=PLy_6D98if3ULEtXtNSY_2qN21VCKgoQAE&index=23&t=106s",
-			UserID:       &userID,
+			UserID:       userID,
 		}
 
 		auth.POST("/urls/generate").WithJSON(dataForInsert).

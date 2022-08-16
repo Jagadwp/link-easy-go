@@ -1,14 +1,20 @@
 package repositories
 
 import (
-	"errors"
-	"time"
-
 	"github.com/Jagadwp/link-easy-go/internal/models"
-	"github.com/Jagadwp/link-easy-go/internal/shared"
-	"github.com/jackc/pgconn"
 	"gorm.io/gorm"
 )
+
+type IUrlRepository interface {
+	GetUrlsByUsername(username string) (*[]models.Url, error)
+	GetUrlsByUserID(userID int) (*[]models.Url, error)
+	GetUrlById(id int) (*models.Url, error)
+	GetUrlByShortLink(shortLink string) (*models.Url, error)
+	IncrementHitCounter(url *models.Url) (*models.Url, error)
+	CreateUrl(url *models.Url) (*models.Url, error)
+	UpdateUrl(url *models.Url) (*models.Url, error)
+	DeleteUrl(url *models.Url) (*models.Url, error)
+}
 
 type UrlRepository struct {
 	db *gorm.DB
@@ -18,60 +24,13 @@ func NewUrlRepository(db *gorm.DB) *UrlRepository {
 	return &UrlRepository{db: db}
 }
 
-func (u *UrlRepository) GetUrlsByUsername(username string) ([]models.Url, error) {
+func (u *UrlRepository) GetUrlsByUsername(username string) (*[]models.Url, error) {
 	var urls []models.Url
 	u.db.Where("user_id = ?", username).Find(&urls)
-	return urls, nil
+	return &urls, nil
 }
 
-func (u *UrlRepository) CreateShortUrl(title, originalLink, shortLink string, userID *int) (*models.Url, error) {
-	//UserID itu pointer, tapi yg masuk value aslinya (int) 👍🏻
-	var url models.Url = models.Url{
-		Title:        title,
-		ShortLink:    shortLink,
-		OriginalLink: originalLink,
-		HitCounter:   0,
-		UserID:       userID,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
-	}
-
-	if err := u.db.Create(&url).Error; err != nil {
-		var perr *pgconn.PgError
-		errors.As(err, &perr)
-		if perr.Code == shared.CODE_ERROR_DUPLICATE_KEY {
-			return &models.Url{}, shared.ErrUrlShortLinkAlreadyExist
-		}
-		return &models.Url{}, err
-	}
-
-	return &url, nil
-}
-
-func (u *UrlRepository) InsertUrl(title string, shortLink string, originalLink string, userID *int) (*models.Url, error) {
-	var url models.Url = models.Url{
-		ShortLink:    shortLink,
-		Title:        title,
-		OriginalLink: originalLink,
-		HitCounter:   0,
-		UserID:       userID,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
-	}
-
-	if err := u.db.Create(&url).Error; err != nil {
-		var perr *pgconn.PgError
-		errors.As(err, &perr)
-		if perr.Code == shared.CODE_ERROR_DUPLICATE_KEY {
-			return &models.Url{}, shared.ErrUrlShortLinkAlreadyExist
-		}
-		return &models.Url{}, err
-	}
-
-	return &url, nil
-}
-
-func (u *UrlRepository) GetAllUrlsByUserID(userID int) (*[]models.Url, error) {
+func (u *UrlRepository) GetUrlsByUserID(userID int) (*[]models.Url, error) {
 	var urls []models.Url
 
 	if err := u.db.Where("user_id = ?", userID).Find(&urls).Error; err != nil {
@@ -98,8 +57,6 @@ func (u *UrlRepository) GetUrlByShortLink(shortLink string) (*models.Url, error)
 		return &models.Url{}, err
 	}
 
-	u.IncrementHitCounter(&url)
-
 	return &url, nil
 }
 
@@ -107,6 +64,14 @@ func (u *UrlRepository) IncrementHitCounter(url *models.Url) (*models.Url, error
 	query := u.db.Model(url).Update("hit_counter", url.HitCounter+1)
 
 	if err := query.Error; err != nil {
+		return &models.Url{}, err
+	}
+
+	return url, nil
+}
+
+func (u *UrlRepository) CreateUrl(url *models.Url) (*models.Url, error) {
+	if err := u.db.Create(url).Error; err != nil {
 		return &models.Url{}, err
 	}
 

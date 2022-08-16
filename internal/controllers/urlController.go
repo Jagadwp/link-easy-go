@@ -26,63 +26,39 @@ func NewUrlController(
 	}
 }
 
-func (ctr *UrlController) CreateShortUrl(c echo.Context) error {
-	currentUser, ok := ctr.userService.GetCurrentUser(c)
-	if !ok {
-		return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrJWTInvalid.Error())
-	}
+// public
+func (ctr *UrlController) GetUrlPublicByShortLink(c echo.Context) error {
+	shortLink := c.Param("short_link")
 
-	userID := currentUser.ID
-	req := dto.GenerateUrlRequest{}
-
-	if err := c.Bind(&req); err != nil {
-		return dto.ErrorResponse(c, http.StatusBadRequest, shared.MESSAGE_FIELD_REQUIRED)
-	}
-
-	req.UserID = &userID
-
-	if !ctr.urlService.IsUrlValid(req.OriginalLink) {
-		return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrOriginalUrlNotValid.Error())
-	}
-		
-	response, err := ctr.urlService.CreateShortUrl(&req)
-
+	response, err := ctr.urlService.GetUrlPublicByShortLink(shortLink)
 	if err != nil {
-		return dto.ErrorResponse(c, http.StatusInternalServerError, "Failed to process request")
-	}
-
-	return dto.SuccessResponse(c, http.StatusOK, "Generated Url successfully inserted", response)
-}
-
-func (ctr *UrlController) InsertUrl(c echo.Context) error {
-	currentUser, ok := ctr.userService.GetCurrentUser(c)
-	if !ok {
-		return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrJWTInvalid.Error())
-	}
-
-	userID := currentUser.ID
-	req := dto.InsertUrlRequest{}
-
-	if err := c.Bind(&req); err != nil {
-		return dto.ErrorResponse(c, http.StatusBadRequest, shared.MESSAGE_FIELD_REQUIRED)
-	}
-	if !ctr.urlService.IsUrlValid(req.OriginalLink) {
-		return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrOriginalUrlNotValid.Error())
-	}
-
-	response, err := ctr.urlService.InsertUrl(req.Title, req.ShortLink, req.OriginalLink, &userID)
-	if err != nil {
-		if errors.Is(err, shared.ErrUrlShortLinkAlreadyExist) {
-			return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrUrlShortLinkAlreadyExist.Error())
+		if(errors.Is(err, shared.ErrUrlNotFound)) {
+			return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrUrlNotFound.Error())
 		} else {
 			return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
 		}
 	}
 
-	return dto.SuccessResponse(c, http.StatusOK, "Url successfully inserted", response)
+	return dto.SuccessResponse(c, http.StatusOK, "Url successfully fetched", response)
 }
 
-func (ctr *UrlController) GetAllUrlsByUserID(c echo.Context) error {
+// public
+func (ctr *UrlController) RedirectShortLink(c echo.Context) error {
+	shortLink := c.Param("short_link")
+
+	response, err := ctr.urlService.GetUrlPublicByShortLink(shortLink)
+	if err != nil {
+		if(errors.Is(err, shared.ErrUrlNotFound)) {
+			return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrUrlNotFound.Error())
+		} else {
+			return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
+		}
+	}
+
+	return c.Redirect(http.StatusFound, response.OriginalLink)
+}
+
+func (ctr *UrlController) GetUrlsByUserID(c echo.Context) error {
 	currentUser, ok := ctr.userService.GetCurrentUser(c)
 	if !ok {
 		return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrJWTInvalid.Error())
@@ -90,12 +66,13 @@ func (ctr *UrlController) GetAllUrlsByUserID(c echo.Context) error {
 
 	userID := currentUser.ID
 
-	response, err := ctr.urlService.GetAllUrlsByUserID(userID)
+	response, err := ctr.urlService.GetUrlsByUserID(userID)
 	if err != nil {
-		return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
-	}
-	if len(*response) == 0 {
-		return dto.ErrorResponse(c, http.StatusNotFound, shared.ErrUrlNotFound.Error())
+		if(errors.Is(err, shared.ErrUrlNotFound)) {
+			return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrUrlNotFound.Error())
+		} else {
+			return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
+		}
 	}
 
 	return dto.SuccessResponse(c, http.StatusOK, "Urls successfully fetched", response)
@@ -114,47 +91,43 @@ func (ctr *UrlController) GetUrlUserById(c echo.Context) error {
 
 	userID := currentUser.ID
 
-	response, err := ctr.urlService.GetUrlById(id)
+	response, err := ctr.urlService.GetUrlUserById(id, userID)
 	if err != nil {
-		return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
-	}
-	if (*response).ID == 0 {
-		return dto.ErrorResponse(c, http.StatusNotFound, shared.ErrUrlNotFound.Error())
-	}
-
-	if ctr.urlService.IsUserAllowedToEdit(userID, *response.UserID) {
-		return dto.SuccessResponse(c, http.StatusOK, "Url successfully fetched", response)
-	} else {
-		return dto.ErrorResponse(c, http.StatusForbidden, shared.ErrForbiddenToAccess.Error())
-	}
-}
-
-func (ctr *UrlController) GetUrlPublicByShortLink(c echo.Context) error {
-	shortLink := c.Param("short_link")
-
-	response, err := ctr.urlService.GetUrlByShortLink(shortLink)
-	if err != nil {
-		return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
-	}
-	if (*response).ShortLink == "" {
-		return dto.ErrorResponse(c, http.StatusNotFound, shared.ErrUrlNotFound.Error())
+		if(errors.Is(err, shared.ErrUrlNotFound)) {
+			return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrUrlNotFound.Error())
+		} else if (errors.Is(err, shared.ErrForbiddenToAccess)) {
+			return dto.ErrorResponse(c, http.StatusForbidden, shared.ErrForbiddenToAccess.Error())
+		} else {
+			return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
+		}
 	}
 
 	return dto.SuccessResponse(c, http.StatusOK, "Url successfully fetched", response)
 }
 
-func (ctr *UrlController) RedirectShortLink(c echo.Context) error {
-	shortLink := c.Param("short_link")
+func (ctr *UrlController) CreateUrl(c echo.Context) error {
+	currentUser, ok := ctr.userService.GetCurrentUser(c)
+	if !ok {
+		return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrJWTInvalid.Error())
+	}
 
-	response, err := ctr.urlService.GetUrlByShortLink(shortLink)
+	userID := currentUser.ID
+	req := dto.CreateUrlRequest{}
+	req.UserID = userID
+	if err := c.Bind(&req); err != nil {
+		return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrRequiredFieldsNotValid.Error())
+	}
+		
+	response, err := ctr.urlService.CreateUrl(&req)
 	if err != nil {
-		return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
-	}
-	if (*response).ShortLink == "" {
-		return dto.ErrorResponse(c, http.StatusNotFound, shared.ErrUrlNotFound.Error())
+		if(errors.Is(err, shared.ErrOriginalUrlNotValid)) {
+			return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrOriginalUrlNotValid.Error())
+		} else {
+			return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
+		}
 	}
 
-	return c.Redirect(http.StatusFound, response.OriginalLink)
+	return dto.SuccessResponse(c, http.StatusOK, "Url successfully created", response)
 }
 
 func (ctr *UrlController) UpdateUrl(c echo.Context) error {
@@ -169,30 +142,28 @@ func (ctr *UrlController) UpdateUrl(c echo.Context) error {
 	}
 
 	userID := currentUser.ID
+	req := dto.UpdateUrlRequest{}
+	req.UserID = userID
+	if err := c.Bind(&req); err != nil {
+		return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrRequiredFieldsNotValid.Error())
+	}
 
-	getUrlResponse, err := ctr.urlService.GetUrlById(id)
+	response, err := ctr.urlService.UpdateUrl(id, &req)
 	if err != nil {
-		return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
-	}
-	if (*getUrlResponse).ID == 0 {
-		return dto.ErrorResponse(c, http.StatusNotFound, shared.ErrUrlNotFound.Error())
-	}
-
-	if ctr.urlService.IsUserAllowedToEdit(userID, *getUrlResponse.UserID) {
-		req := dto.UpdateUrlRequest{}
-		if err := c.Bind(&req); err != nil {
-			return dto.ErrorResponse(c, http.StatusBadRequest, shared.MESSAGE_FIELD_REQUIRED)
-		}
-
-		updateResponse, err := ctr.urlService.UpdateUrl(id, &req)
-		if err != nil {
+		if(errors.Is(err, shared.ErrUrlNotFound)) {
+			return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrUrlNotFound.Error())
+		} else if(errors.Is(err, shared.ErrUrlShortLinkAlreadyExist)) {
+			return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrUrlShortLinkAlreadyExist.Error())
+		} else if(errors.Is(err, shared.ErrOriginalUrlNotValid)) {
+			return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrOriginalUrlNotValid.Error())
+		} else if (errors.Is(err, shared.ErrForbiddenToAccess)) {
+			return dto.ErrorResponse(c, http.StatusForbidden, shared.ErrForbiddenToAccess.Error())
+		} else {
 			return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
 		}
-
-		return dto.SuccessResponse(c, http.StatusOK, "Url successfully updated", updateResponse)
-	} else {
-		return dto.ErrorResponse(c, http.StatusForbidden, shared.ErrForbiddenToAccess.Error())
 	}
+
+	return dto.SuccessResponse(c, http.StatusOK, "Url successfully updated", response)
 }
 
 func (ctr *UrlController) DeleteUrl(c echo.Context) error {
@@ -208,23 +179,16 @@ func (ctr *UrlController) DeleteUrl(c echo.Context) error {
 
 	userID := currentUser.ID
 
-	getUrlResponse, err := ctr.urlService.GetUrlById(id)
+	response, err := ctr.urlService.DeleteUrl(id, userID)
 	if err != nil {
-		return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
-	}
-	if (*getUrlResponse).ID == 0 {
-		return dto.ErrorResponse(c, http.StatusNotFound, shared.ErrUrlNotFound.Error())
-	}
-
-	if ctr.urlService.IsUserAllowedToEdit(userID, *getUrlResponse.UserID) {
-		deleteResponse, err := ctr.urlService.DeleteUrl(id)
-		if err != nil {
+		if(errors.Is(err, shared.ErrUrlNotFound)) {
+			return dto.ErrorResponse(c, http.StatusBadRequest, shared.ErrUrlNotFound.Error())
+		} else if (errors.Is(err, shared.ErrForbiddenToAccess)) {
+			return dto.ErrorResponse(c, http.StatusForbidden, shared.ErrForbiddenToAccess.Error())
+		} else {
 			return dto.ErrorResponse(c, http.StatusInternalServerError, shared.ErrFailedToProcessRequest.Error())
 		}
-
-		return dto.SuccessResponse(c, http.StatusOK, "Url successfully deleted", deleteResponse)
-	} else {
-		return dto.ErrorResponse(c, http.StatusForbidden, shared.ErrForbiddenToAccess.Error())
 	}
 
+	return dto.SuccessResponse(c, http.StatusOK, "Url successfully deleted", response)
 }
