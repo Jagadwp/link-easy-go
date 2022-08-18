@@ -1,12 +1,19 @@
 package repositories
 
 import (
-	"time"
-
 	"gorm.io/gorm"
 
 	"github.com/Jagadwp/link-easy-go/internal/models"
 )
+
+type IUserRepository interface {
+	InsertUser(user *models.User) (*models.User, error)
+	GetAllUsers() (*[]models.User, error)
+	GetUserById(id int) (*models.User, error)
+	GetUserByUsername(username string) (*models.User, error)
+	UpdateUser(user *models.User) (*models.User, error)
+	DeleteUser(user *models.User) (*models.User, error)
+}
 
 type UserRepository struct {
 	db *gorm.DB
@@ -16,18 +23,7 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-func (u *UserRepository) InsertUser(username, fullname, email, password string) (*models.User, error) {
-
-	var user *models.User = &models.User{
-		Username:  username,
-		Fullname:  fullname,
-		Email:     email,
-		Password:  password,
-		Admin:     false,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-
+func (u *UserRepository) InsertUser(user *models.User) (*models.User, error) {
 	if err := u.db.Create(&user).Error; err != nil {
 		return nil, err
 	}
