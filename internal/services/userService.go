@@ -1,13 +1,14 @@
 package services
 
 import (
-	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/Jagadwp/link-easy-go/internal/models"
 	"github.com/Jagadwp/link-easy-go/internal/repositories"
 	"github.com/Jagadwp/link-easy-go/internal/services/helper"
+	"github.com/Jagadwp/link-easy-go/internal/shared"
 	"github.com/Jagadwp/link-easy-go/internal/shared/config"
 	"github.com/Jagadwp/link-easy-go/internal/shared/dto"
 	"github.com/dgrijalva/jwt-go"
@@ -16,24 +17,24 @@ import (
 )
 
 type UserService struct {
-	usersRepo *repositories.UserRepository
+	usersRepo repositories.IUserRepository
 }
 
-func NewUserService(usersRepo *repositories.UserRepository) *UserService {
+func NewUserService(usersRepo repositories.IUserRepository) *UserService {
 	return &UserService{usersRepo: usersRepo}
 }
 
-func (s *UserService) Login(req *dto.LoginRequest) (*dto.LoginResponse, error) {
+func (s *UserService) Login(req *dto.LoginRequest) (*dto.LoginResponse, int, error) {
 	user, err := s.usersRepo.GetUserByUsername(req.Username)
 
 	if err != nil {
-		return &dto.LoginResponse{}, errors.New("username not found")
+		return &dto.LoginResponse{}, http.StatusBadRequest, shared.ErrUserNotFound
 	}
 
 	match, _ := helper.CheckPasswordHash(req.Password, user.Password)
 
 	if !match {
-		return &dto.LoginResponse{}, errors.New("hash and password doesn't match")
+		return &dto.LoginResponse{}, http.StatusBadRequest, shared.ErrUserWrongPass
 	}
 
 	claims := &dto.JwtCustomClaims{
@@ -50,7 +51,7 @@ func (s *UserService) Login(req *dto.LoginRequest) (*dto.LoginResponse, error) {
 
 	signedToken, err := token.SignedString([]byte(config.JWT_SIGNATURE_KEY))
 	if err != nil {
-		return &dto.LoginResponse{}, errors.New("error while processing token")
+		return &dto.LoginResponse{}, http.StatusInternalServerError, shared.ErrFailedToProcessToken
 	}
 
 	return &dto.LoginResponse{
@@ -60,7 +61,7 @@ func (s *UserService) Login(req *dto.LoginRequest) (*dto.LoginResponse, error) {
 		Email:    user.Email,
 		Admin:    user.Admin,
 		Token:    signedToken,
-	}, nil
+	}, http.StatusOK, nil
 }
 
 func (s *UserService) GetCurrentUser(c echo.Context) (userInfo *dto.JwtUserInfo, ok bool) {
@@ -84,13 +85,21 @@ func (s *UserService) GetCurrentUser(c echo.Context) (userInfo *dto.JwtUserInfo,
 	return newUser, true
 }
 
-func (s *UserService) InsertUser(req *dto.InsertUserRequest) (*dto.CommonUserResponse, error) {
+func (s *UserService) InsertUser(req *dto.InsertUserRequest) (*dto.CommonUserResponse, int, error) {
 	hashedPass, _ := helper.Hash(req.Password)
 
-	user, err := s.usersRepo.InsertUser(req.Username, req.Fullname, req.Email, hashedPass)
+	user, err := s.usersRepo.InsertUser(&models.User{
+		Username:  req.Username,
+		Fullname:  req.Fullname,
+		Email:     req.Email,
+		Password:  hashedPass,
+		Admin:     false,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	})
 
 	if err != nil {
-		return &dto.CommonUserResponse{}, err
+		return &dto.CommonUserResponse{}, http.StatusInternalServerError, shared.ErrFailedToProcessRequest
 	}
 
 	return &dto.CommonUserResponse{
@@ -101,14 +110,14 @@ func (s *UserService) InsertUser(req *dto.InsertUserRequest) (*dto.CommonUserRes
 		Admin:     user.Admin,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
-	}, nil
+	}, http.StatusCreated, nil
 }
 
-func (s *UserService) GetAllUsers() (*[]dto.CommonUserResponse, error) {
+func (s *UserService) GetAllUsers() (*[]dto.CommonUserResponse, int, error) {
 	users, err := s.usersRepo.GetAllUsers()
 
 	if err != nil {
-		return &[]dto.CommonUserResponse{}, err
+		return &[]dto.CommonUserResponse{}, http.StatusInternalServerError, shared.ErrFailedToProcessRequest
 	}
 
 	var data []dto.CommonUserResponse
@@ -126,14 +135,18 @@ func (s *UserService) GetAllUsers() (*[]dto.CommonUserResponse, error) {
 		data = append(data, tempData)
 	}
 
-	return &data, nil
+	return &data, http.StatusOK, nil
 }
 
-func (s *UserService) GetUserById(id int) (*dto.CommonUserResponse, error) {
+func (s *UserService) GetUserById(id int) (*dto.CommonUserResponse, int, error) {
 	user, err := s.usersRepo.GetUserById(id)
 
+	if (*user).ID == 0 {
+		return nil, http.StatusNotFound, shared.ErrUserNotFound
+	}
+
 	if err != nil {
-		return &dto.CommonUserResponse{}, err
+		return nil, http.StatusInternalServerError, shared.ErrFailedToProcessRequest
 	}
 
 	return &dto.CommonUserResponse{
@@ -144,15 +157,15 @@ func (s *UserService) GetUserById(id int) (*dto.CommonUserResponse, error) {
 		Admin:     user.Admin,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
-	}, nil
+	}, http.StatusOK, nil
 
 }
 
-func (s *UserService) UpdateUser(id int, req *dto.UpdateUserRequest) (*dto.CommonUserResponse, error) {
+func (s *UserService) UpdateUser(id int, req *dto.UpdateUserRequest) (*dto.CommonUserResponse, int, error) {
 	user, err := s.usersRepo.GetUserById(id)
 
 	if err != nil {
-		return &dto.CommonUserResponse{}, err
+		return &dto.CommonUserResponse{}, http.StatusNotFound, shared.ErrUserNotFound
 	}
 
 	if req.Username != "" {
@@ -173,13 +186,12 @@ func (s *UserService) UpdateUser(id int, req *dto.UpdateUserRequest) (*dto.Commo
 	}
 
 	user.Admin = req.Admin
-
 	user.UpdatedAt = time.Now()
 
 	user, err = s.usersRepo.UpdateUser(user)
 
 	if err != nil {
-		return &dto.CommonUserResponse{}, err
+		return &dto.CommonUserResponse{}, http.StatusInternalServerError, shared.ErrFailedToProcessRequest
 	}
 
 	return &dto.CommonUserResponse{
@@ -190,21 +202,21 @@ func (s *UserService) UpdateUser(id int, req *dto.UpdateUserRequest) (*dto.Commo
 		Admin:     user.Admin,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
-	}, nil
+	}, http.StatusOK, nil
 }
 
-func (s *UserService) DeleteUser(id int) (*models.User, error) {
+func (s *UserService) DeleteUser(id int) (*models.User, int, error) {
 	user, err := s.usersRepo.GetUserById(id)
 
 	if err != nil {
-		return &models.User{}, err
+		return &models.User{}, http.StatusNotFound, shared.ErrUserNotFound
 	}
 
 	user, err = s.usersRepo.DeleteUser(user)
 
 	if err != nil {
-		return &models.User{}, err
+		return &models.User{}, http.StatusInternalServerError, shared.ErrFailedToProcessRequest
 	}
 
-	return user, nil
+	return user, http.StatusOK, nil
 }

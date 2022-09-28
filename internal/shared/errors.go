@@ -18,11 +18,15 @@ var (
 	ErrJWTInvalid = fmt.Errorf("invalid token")
 	ErrJWTExpired = fmt.Errorf("token already expired")
 
-	ErrUserAlreadyExist = fmt.Errorf("user already exist")
-
+	
 	ErrUrlShortLinkAlreadyExist = fmt.Errorf("short link already exist")
 	ErrUrlNotFound = fmt.Errorf("url not found")
 	ErrOriginalUrlNotValid = fmt.Errorf("original url is not valid")
+	
+	ErrUserAlreadyExist = fmt.Errorf("user already exist")
+	ErrUserNotFound = fmt.Errorf("user not found")
+	ErrUserWrongPass = fmt.Errorf("hash and password doesn't match")
+	ErrFailedToProcessToken = fmt.Errorf("failed to process token")
 )
 
 type ErrorGorm struct {
