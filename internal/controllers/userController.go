@@ -94,7 +94,7 @@ func (ctr *UserController) UpdateUser(c echo.Context) error {
 	response, statusCode, err := ctr.services.UpdateUser(id, &req)
 
 	if err != nil {
-		dto.ErrorResponse(c, statusCode, err.Error())
+		return dto.ErrorResponse(c, statusCode, err.Error())
 	}
 
 	return dto.SuccessResponse(c, statusCode, "User successfully updated", response)
